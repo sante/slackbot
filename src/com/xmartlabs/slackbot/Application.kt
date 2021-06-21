@@ -6,18 +6,20 @@ import com.slack.api.bolt.jetty.SlackAppServer
 import com.slack.api.bolt.request.builtin.SlashCommandRequest
 import com.slack.api.bolt.response.Response
 
+private const val DEFAULT_PORT = 3000
 
 fun main(args: Array<String>) {
     val app = App()
         .command("/xlbot") { req, ctx -> processCommand(req, ctx) }
         .command("/slackhelp") { req, ctx -> processCommand(req, ctx) }
 
-    val port = System.getenv("PORT")?.toIntOrNull() ?: 3000
+    val port = System.getenv("PORT")?.toIntOrNull() ?: DEFAULT_PORT
 
     val server = SlackAppServer(app, "/slack/events", port)
     server.start() // http://localhost:3000/slack/events
 }
 
+@Suppress("LongMethod", "MaxLineLength")
 private fun processCommand(
     req: SlashCommandRequest,
     ctx: SlashCommandContext
@@ -129,4 +131,3 @@ private fun processCommand(
     }
     return ctx.ack(answer)
 }
-
