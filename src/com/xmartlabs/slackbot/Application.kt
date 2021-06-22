@@ -7,17 +7,36 @@ import com.slack.api.bolt.jetty.SlackAppServer
 import com.slack.api.bolt.request.builtin.SlashCommandRequest
 import com.slack.api.bolt.response.Response
 import com.slack.api.bolt.response.ResponseTypes
+import com.slack.api.model.event.MemberJoinedChannelEvent
 
 private val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
 private const val PROTECTED_CHANNEL_MESSAGE =
     "Hi :wave:\nPublic visible messages shouldn't be sent in protected channels"
 private const val DEFAULT_PORT = 3000
 
+private const val WELCOME_CHANNEL = "random"
+const val XL_BOT_NAME = "xlbot2" // ID: U025KD1C28K
+
 fun main(args: Array<String>) {
     val app = App()
         .command("/xlbot") { req, ctx -> processCommand(req, ctx) }
         .command("/slackhelp") { req, ctx -> processCommand(req, ctx) }
         .command("/onboarding") { req, ctx -> sendOnboardingCommand(req, ctx) }
+
+    app.event(MemberJoinedChannelEvent::class.java) { eventPayload, ctx ->
+        val event = eventPayload.event
+        val channels = UserChannelRepository.getConversations(ctx)
+        val channel = channels
+            .firstOrNull { it.id == event.channel }
+        ctx.logger.debug("New member added to ${event.channel} - ${event.user}")
+        if (channel?.name?.contains(WELCOME_CHANNEL, true) == true) {
+            ctx.say {
+                it.channel(event.channel)
+                    .text(MessageManager.getOngoardingMessage(XL_BOT_NAME, listOf(event.user)))
+            }
+        }
+        ctx.ack()
+    }
 
     val port = System.getenv("PORT")?.toIntOrNull() ?: DEFAULT_PORT
 
@@ -31,7 +50,7 @@ fun sendOnboardingCommand(req: SlashCommandRequest, ctx: SlashCommandContext): R
     } else {
         val command = CommandManager.onboarding
         val response = SlashCommandResponse.builder()
-            .text(command.answer)
+            .text(command.answer(req.payload, ctx))
             .responseType(ResponseTypes.inChannel)
             .build()
         ctx.ack(response)
@@ -40,7 +59,4 @@ fun sendOnboardingCommand(req: SlashCommandRequest, ctx: SlashCommandContext): R
 private fun processCommand(
     req: SlashCommandRequest,
     ctx: SlashCommandContext
-): Response? {
-    val command = CommandManager.provideCommand(req.payload?.text)
-    return ctx.ack(command.answer)
-}
+): Response? = ctx.ack(CommandManager.processCommand(ctx, req.payload))

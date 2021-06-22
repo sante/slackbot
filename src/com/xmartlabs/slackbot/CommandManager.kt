@@ -1,10 +1,14 @@
 package com.xmartlabs.slackbot
 
+import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload
+import com.slack.api.bolt.context.Context
+
 @Suppress("MaxLineLength")
 object CommandManager {
-    private val default = Command() {
+
+    private val default = Command() { _, context ->
         """
-                Hi :wave:! Check XL useful bots! :slack:
+                Hi :wave:! Check XL useful <@${UserChannelRepository.toUserId(context, XL_BOT_NAME)}> commands! :slack:
                 • *toggl* -> Where should I track this? :toggl_on:
                 • *wifi pass* -> Do you know Xmartlabs' office WIFI password? :signal_strength: :key:
                 • *recycling*-> Recycling help! :recycle:
@@ -18,25 +22,13 @@ object CommandManager {
                 """.trimIndent()
     }
 
-    val onboarding = Command("setup process", "onboarding") {
-        """
-
-                Welcome to Xmartlabs!:wave: :xl: We are very happy for having you onboard :muscle::muscle::muscle:  
-                 
-                Go to the Onboarding to know which are your next steps! 
-                https://www.notion.so/xmartlabs/Onboarding-c092b413380341948aabffa17bd85647 
-                    
-                Additionally, please: 
-                • Add a Profile picture to Slack & Bamboo :camera: :star: 
-                • Add calendar URLs :calendar:  -> https://www.notion.so/xmartlabs/Setup-Calendars-URLs-40a4c5506a03429dbdccea169646a8a3 
-                • Shot :absenta: (in next XL after)
-                
-                Regards @XlBot
-                """.trimIndent()
+    val onboarding = Command("setup process", "onboarding") { payload, context ->
+        val peoplePayloadText = getMembersFromCommandText(context, payload?.text)
+        MessageManager.getOngoardingMessage(UserChannelRepository.toUserId(context, XL_BOT_NAME), peoplePayloadText)
     }
 
     private val commands = listOf(
-        Command("anniversary") {
+        Command("anniversary") { _, _ ->
             """
                 
                 *Anniversary* :tada: :birthday::
@@ -51,14 +43,14 @@ object CommandManager {
                     • A fin de mes se hace un festejo para todos los cumpleañeros! La empresa compra tortas, bebidas y algo para picar. :birthday: :pizza:
                 """.trimIndent()
         },
-        Command("calendar") {
+        Command("calendar") { _, _ ->
             """
                 
                 *Calendars* :calendar: :
-                    - https://www.notion.so/xmartlabs/Setup-Calendars-URLs-40a4c5506a03429dbdccea169646a8a3
+                    - <https://www.notion.so/xmartlabs/Setup-Calendars-URLs-40a4c5506a03429dbdccea169646a8a3 | Calendar Setup>
                 """.trimIndent()
         },
-        Command("lightning") {
+        Command("lightning") { _, _ ->
             """
                 
                 *Lightning talks* :flashlight:: 
@@ -70,7 +62,7 @@ object CommandManager {
                 •  Remember to track the talk in Toggl (Lightning talk -> Xmartlabs) :toggl_on:
                 """.trimIndent()
         },
-        Command("recycling") {
+        Command("recycling") { _, _ ->
             """
 
                 *Recycling* :recycle::
@@ -101,7 +93,7 @@ object CommandManager {
                 Recordá que todo lo reciclable tiene que estar limpio y seco :recycle:!
                 """.trimIndent()
         },
-        Command("toggl") {
+        Command("toggl") { _, _ ->
             """
                 
                 *Toggl* :toggl_on: :
@@ -118,7 +110,7 @@ object CommandManager {
               
                 """.trimIndent()
         },
-        Command("wifi pass") {
+        Command("wifi pass") { _, _ ->
             """
                 *Wifi pass* :signal_strength: :key::
                 Internal: Xmartlabs33, Guests: xlinvitado
@@ -141,13 +133,21 @@ object CommandManager {
     private fun String.sanitizeKey() = replace(" ", "_")
         .lowercase()
 
-    fun provideCommand(userKey: String?): Command =
-        userKey?.let {
-            commands
-                .firstOrNull { command ->
-                    command.keys.any { commandKey ->
-                        userKey.sanitizeKey().contains(commandKey.sanitizeKey())
+    fun processCommand(ctx: Context, payload: SlashCommandPayload?): String = (
+            payload?.text?.let { userKey ->
+                commands
+                    .firstOrNull { command ->
+                        command.keys.any { commandKey ->
+                            userKey.sanitizeKey().contains(commandKey.sanitizeKey())
+                        }
                     }
-                }
-        } ?: default
+            } ?: default)
+        .answer(payload, ctx)
 }
+
+private fun getMembersFromCommandText(ctx: Context, peopleCommandText: String?): List<String>? =
+    peopleCommandText
+        ?.split("@")
+        ?.map { it.trim() }
+        ?.filterNot { it.isBlank() }
+        ?.let { UserChannelRepository.toUserId(ctx, it) }

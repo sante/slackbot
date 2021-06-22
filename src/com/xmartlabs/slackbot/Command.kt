@@ -1,6 +1,6 @@
 package com.xmartlabs.slackbot
 
-class Command(vararg val keys: String, private val answerCallback: () -> String) {
-    val answer: String
-        get() = answerCallback()
-}
+import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload
+import com.slack.api.bolt.context.Context
+
+class Command(vararg val keys: String, val answer: (SlashCommandPayload?, ctx: Context) -> String)
