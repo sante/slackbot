@@ -54,12 +54,12 @@ object CommandManager {
             """
                 
                 *Lightning talks* :flashlight:: 
-                The following is useful information about our lightning talks :zap:, 30 min talks where someone exposes something interesting he/she found.
-                
-                •  Lightning talks are added to the Eventos XL calendar :calendar: You will find the Zoom link meeting in there too :zoom:
-                •  Do you want to share something interesting with the team? Please follow this link :memo:
-                •  We record every lightning talk so don’t care if you are not able to join that day. You can find all the recorded lightning talks here :movie_camera:
-                •  Remember to track the talk in Toggl (Lightning talk -> Xmartlabs) :toggl_on:
+                Hi! The following is useful information about our lightning talks :zap:, 30 min talks where someone exposes something interesting he/she found.
+
+                • Lightning talks are added to the Eventos XL calendar :calendar: You will find the Zoom link meeting in there too :zoom:
+                • Do you want to share something interesting with the team? <https://docs.google.com/forms/d/e/1FAIpQLSfvXceDAb9Eijkzkvi7-WUvvAHDh48NYEEIRDkTds6zZeXaUw/viewform | Please follow this link:> :memo:
+                • We record every lightning talk so don’t care if you are not able to join that day. <https://www.notion.so/xmartlabs/Lightning-Talks-f21bb5e19823415fba3dcd2efc42d4ac | You can find all the recorded lightning talks here:>  :movie_camera:
+                • Remember to track the talk in Toggl (Lightning talk -> Xmartlabs) :toggl_on:
                 """.trimIndent()
         },
         Command("recycling") { _, _ ->

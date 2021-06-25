@@ -20,7 +20,7 @@ const val XL_BOT_NAME = "xlbot2" // ID: U025KD1C28K
 fun main(args: Array<String>) {
     val app = App()
         .command("/xlbot") { req, ctx -> processCommand(req, ctx) }
-        .command("/slackhelp") { req, ctx -> processCommand(req, ctx) }
+        .command("/slackhelp") { req, ctx -> processCommand(req, ctx, visibleInChannel = true) }
         .command("/onboarding") { req, ctx -> sendOnboardingCommand(req, ctx) }
 
     app.event(MemberJoinedChannelEvent::class.java) { eventPayload, ctx ->
@@ -58,5 +58,11 @@ fun sendOnboardingCommand(req: SlashCommandRequest, ctx: SlashCommandContext): R
 
 private fun processCommand(
     req: SlashCommandRequest,
-    ctx: SlashCommandContext
-): Response? = ctx.ack(CommandManager.processCommand(ctx, req.payload))
+    ctx: SlashCommandContext,
+    visibleInChannel: Boolean = false,
+) = ctx.ack(
+    SlashCommandResponse.builder()
+        .text(CommandManager.processCommand(ctx, req.payload))
+        .responseType(if (visibleInChannel) ResponseTypes.inChannel else ResponseTypes.ephemeral)
+        .build()
+)
