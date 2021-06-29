@@ -1,37 +1,32 @@
 package com.xmartlabs.slackbot
 
 import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload
+import com.slack.api.app_backend.slash_commands.response.SlashCommandResponse
 import com.slack.api.bolt.context.Context
+import com.slack.api.bolt.response.ResponseTypes
+import com.slack.api.model.kotlin_extension.block.withBlocks
 
 @Suppress("MaxLineLength")
 object CommandManager {
+    val onboarding =
+        Command(
+            "onboarding", "setup process",
+            title = "Onboarding :wave: :xl:",
+            description = "Do you know what you have to do when you onboard to :xl: ?"
+        ) { payloadText, context ->
+            val peoplePayloadText = getMembersFromCommandText(context, payloadText)
+            MessageManager.getOngoardingMessage(UserChannelRepository.toUserId(context, XL_BOT_NAME), peoplePayloadText)
+        }
 
-    private val default = Command() { _, context ->
-        """
-                Hi :wave:! Check XL useful <@${UserChannelRepository.toUserId(context, XL_BOT_NAME)}> commands! :slack:
-                • *toggl* -> Where should I track this? :toggl_on:
-                • *wifi pass* -> Do you know Xmartlabs' office WIFI password? :signal_strength: :key:
-                • *recycling*-> Recycling help! :recycle:
-                • *anniversary* -> What happens in my anniversary/birthday? :tada: :birthday:
-                • *calendar urls?*-> Who is in TPO? When is the next lightning talk? :calendar:
-                • *setup process* -> Do you know what you have to do when you onboard to :xl: ?
-                • *lightning talks*-> WTF is a lightning talk :zap:?
-                
-                
-                This bot *WAS NOT* made by @bala
-                """.trimIndent()
-    }
-
-    val onboarding = Command("setup process", "onboarding") { payload, context ->
-        val peoplePayloadText = getMembersFromCommandText(context, payload?.text)
-        MessageManager.getOngoardingMessage(UserChannelRepository.toUserId(context, XL_BOT_NAME), peoplePayloadText)
-    }
-
-    private val commands = listOf(
-        Command("anniversary") { _, _ ->
+    val commands = listOf(
+        Command(
+            "anniversary",
+            title = "Anniversary :tada: :birthday:",
+            description = "What happens in my anniversary/birthday? :tada: :birthday:"
+        ) { _, _ ->
             """
                 
-                *Anniversary* :tada: :birthday::
+                *Anniversary* :tada: :birthday:
                 
                 • *Aniversarios y 3 meses en la empresa:* 
                     • Cada mes contactamos a los que cumplen su aniversario y 3 meses en la empresa. 
@@ -43,14 +38,22 @@ object CommandManager {
                     • A fin de mes se hace un festejo para todos los cumpleañeros! La empresa compra tortas, bebidas y algo para picar. :birthday: :pizza:
                 """.trimIndent()
         },
-        Command("calendar") { _, _ ->
+        Command(
+            "calendar",
+            title = "Calendars setup :calendar:",
+            description = "Who is in TPO? When is the next lightning talk? :calendar:",
+        ) { _, _ ->
             """
                 
-                *Calendars* :calendar: :
+                *Calendars* :calendar:
                     - <https://www.notion.so/xmartlabs/Setup-Calendars-URLs-40a4c5506a03429dbdccea169646a8a3 | Calendar Setup>
                 """.trimIndent()
         },
-        Command("lightning") { _, _ ->
+        Command(
+            "lightning",
+            title = "Lightning talks :flashlight:",
+            description = "WTF is a lightning talk :zap:?"
+        ) { _, _ ->
             """
                 
                 *Lightning talks* :flashlight:: 
@@ -62,10 +65,14 @@ object CommandManager {
                 • Remember to track the talk in Toggl (Lightning talk -> Xmartlabs) :toggl_on:
                 """.trimIndent()
         },
-        Command("recycling") { _, _ ->
+        Command(
+            "recycling",
+            title = "Recycling :recycle:",
+            description = "Recycling help! :recycle:"
+        ) { _, _ ->
             """
 
-                *Recycling* :recycle::
+                *Recycling* :recycle:
 
                 Cosas que parecen reciclables pero no lo son 
                 • *Mezclados (Negro)*: 
@@ -93,10 +100,14 @@ object CommandManager {
                 Recordá que todo lo reciclable tiene que estar limpio y seco :recycle:!
                 """.trimIndent()
         },
-        Command("toggl") { _, _ ->
+        Command(
+            "toggl",
+            title = "Toggl :toggl_on:",
+            description = "Where should I track this? :toggl_on:"
+        ) { _, _ ->
             """
                 
-                *Toggl* :toggl_on: :
+                *Toggl* :toggl_on:
                 
                 • ¿Entrevistas? _Seleccion y entrevistas -> Xmartlabs_
                 • ¿Reviews? _Team Reviews -> Xmartlabs_
@@ -110,21 +121,67 @@ object CommandManager {
               
                 """.trimIndent()
         },
-        Command("wifi pass") { _, _ ->
+        Command(
+            "wifi pass",
+            title = "Wifi pass :signal_strength:",
+            description = "Do you know Xmartlabs' office WIFI password? :signal_strength: :key:"
+        ) { _, _ ->
             """
-                *Wifi pass* :signal_strength: :key::
+                *Wifi pass* :signal_strength: :key:
                 Internal: Xmartlabs33, Guests: xlinvitado
             """.trimIndent()
         },
     ) + onboarding
 
+    private val default = Command(
+        title = "Help Command",
+        answerResponse = { _, context, _ ->
+            SlashCommandResponse.builder()
+                .blocks(withBlocks {
+                    section {
+                        markdownText(
+                            "Hi :wave:! Check XL useful <@${
+                                UserChannelRepository.toUserId(
+                                    context,
+                                    XL_BOT_NAME
+                                )
+                            }> commands! :slack:"
+                        )
+                    }
+
+                    commands.forEach { command ->
+                        section {
+                            button {
+                                actionId(command.buttonActionId)
+                                text(command.title, emoji = true)
+                                value(command.keys.first())
+                            }
+                            if (!command.description.isNullOrBlank()) {
+                                markdownText("• ${command.description}", true)
+                            }
+                        }
+                    }
+                })
+                .responseType(ResponseTypes.ephemeral) // Force it
+                .build()
+        },
+        answerText = { _, context ->
+            val options = commands.joinToString(" \n") { command ->
+                "• *${command.title}*: $${command.description}"
+            }
+            val botUser = UserChannelRepository.toUserId(context, XL_BOT_NAME)
+            "\nHi :wave:! Check XL useful <@$botUser> commands! :slack:\n\n$options"
+        },
+    )
+
     init {
-        require(commands
-            .flatMap { it.keys.asList() }
-            .groupBy { it.lowercase() }
-            .values
-            .map { it.size }
-            .maxOrNull() == 1
+        require(
+            commands
+                .flatMap { it.keys.asList() }
+                .groupBy { it.lowercase() }
+                .values
+                .map { it.size }
+                .maxOrNull() == 1
         ) {
             "Duplicate commands are not allowed"
         }
@@ -133,7 +190,7 @@ object CommandManager {
     private fun String.sanitizeKey() = replace(" ", "_")
         .lowercase()
 
-    fun processCommand(ctx: Context, payload: SlashCommandPayload?): String = (
+    fun processCommand(ctx: Context, payload: SlashCommandPayload?, visibleInChannel: Boolean): SlashCommandResponse = (
             payload?.text?.let { userKey ->
                 commands
                     .firstOrNull { command ->
@@ -142,7 +199,7 @@ object CommandManager {
                         }
                     }
             } ?: default)
-        .answer(payload, ctx)
+        .answerResponse(payload?.text, ctx, visibleInChannel)
 }
 
 private fun getMembersFromCommandText(ctx: Context, peopleCommandText: String?): List<String>? =

@@ -51,6 +51,8 @@ dependencies {
     implementation("com.slack.api:bolt:$boltVersion")
     implementation("com.slack.api:bolt-servlet:$boltVersion")
     implementation("com.slack.api:bolt-jetty:$boltVersion")
+    implementation("com.slack.api:slack-api-model-kotlin-extension:$boltVersion")
+    implementation("com.slack.api:slack-api-client-kotlin-extension:$boltVersion")
 }
 
 dependencies {
