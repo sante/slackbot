@@ -41,7 +41,7 @@ object CommandManager {
         Command(
             "calendar",
             title = "Calendars setup :calendar:",
-            description = "Who is in TPO? When is the next lightning talk? :calendar:",
+            description = "Who is in PTO? When is the next lightning talk? :calendar:",
         ) { _, _ ->
             """
                 
