@@ -132,8 +132,22 @@ object CommandManager {
             """.trimIndent()
         },
         Command(
+            "slack", "guidelines",
+            title = "XmartLabs' Slack Guidelines :slack:",
+            description = "Which are the XmartLabs' Slack guidelines? :slack:"
+        ) { _, _ ->
+            """
+               <https://www.notion.so/xmartlabs/XmartLabs-guide-to-Slack-88a2386a9a6943c0bb2c9d44b316a4ac | XmartLabs' guide to Slack> :slack: :xl:
+
+               *Slack* is a communicative platform which enables you to have a simple instant messaging system, having all the collaboration features you need in one place.
+               It provides direct message, public and private shared, and video calls within the platform.
+               <https://www.notion.so/xmartlabs/XmartLabs-guide-to-Slack-88a2386a9a6943c0bb2c9d44b316a4ac | XmartLabs' Slack Guidelines> is a quick guide on how to effectively use Slack for both internal and external communications.
+               
+            """.trimIndent()
+        },
+        Command(
             "feedback",
-            title = "Share XlBot feedback! :slack: :writing_hand:",
+            title = "Share XlBot feedback! :writing_hand:",
             description = "How can I share XlBot feedback? :slack: :writing_hand:"
         ) { _, _ ->
             """
