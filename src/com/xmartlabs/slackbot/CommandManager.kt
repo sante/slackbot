@@ -18,7 +18,7 @@ object CommandManager {
             MessageManager.getOngoardingMessage(UserChannelRepository.toUserId(context, XL_BOT_NAME), peoplePayloadText)
         }
 
-    val commands = listOf(
+    val commands = listOf(onboarding) + listOf(
         Command(
             "anniversary",
             title = "Anniversary :tada: :birthday:",
@@ -131,7 +131,19 @@ object CommandManager {
                 Internal: Xmartlabs33, Guests: xlinvitado
             """.trimIndent()
         },
-    ) + onboarding
+        Command(
+            "feedback",
+            title = "Share XlBot feedback! :slack: :writing_hand:",
+            description = "How can I share XlBot feedback? :slack: :writing_hand:"
+        ) { _, _ ->
+            """
+               Hey, thanks for sharing your feedback! :muscle:
+               If you want to propose a new feature you can open a <https://github.com/xmartlabs/slackbot/discussions | GitHub Discussion> or an <https://github.com/xmartlabs/slackbot/issues | issue>.
+               
+               All contributions are welcomed! :github: 
+            """.trimIndent()
+        },
+    )
 
     private val default = Command(
         title = "Help Command",
@@ -149,26 +161,30 @@ object CommandManager {
                         )
                     }
 
-                    commands.forEach { command ->
-                        section {
-                            button {
-                                actionId(command.buttonActionId)
-                                text(command.title, emoji = true)
-                                value(command.keys.first())
-                            }
-                            if (!command.description.isNullOrBlank()) {
-                                markdownText("• ${command.description}", true)
+                    commands
+                        .filter(Command::visible)
+                        .forEach { command ->
+                            section {
+                                button {
+                                    actionId(command.buttonActionId)
+                                    text(command.title, emoji = true)
+                                    value(command.keys.first())
+                                }
+                                if (!command.description.isNullOrBlank()) {
+                                    markdownText("• ${command.description}", true)
+                                }
                             }
                         }
-                    }
                 })
                 .responseType(ResponseTypes.ephemeral) // Force it
                 .build()
         },
         answerText = { _, context ->
-            val options = commands.joinToString(" \n") { command ->
-                "• *${command.title}*: $${command.description}"
-            }
+            val options = commands
+                .filter(Command::visible)
+                .joinToString(" \n") { command ->
+                    "• *${command.title}*: $${command.description}"
+                }
             val botUser = UserChannelRepository.toUserId(context, XL_BOT_NAME)
             "\nHi :wave:! Check XL useful <@$botUser> commands! :slack:\n\n$options"
         },

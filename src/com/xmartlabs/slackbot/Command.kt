@@ -9,6 +9,7 @@ class Command(
     vararg val keys: String,
     val title: String = capitalizeFirstLetter(keys) ?: "",
     val description: String? = null,
+    val visible: Boolean = true,
     val answerResponse: (command: String?, ctx: Context, visibleInChannel: Boolean) -> SlashCommandResponse =
         { text, ctx, visibleInChannel ->
             SlashCommandResponse.builder().text(answerText(text, ctx))

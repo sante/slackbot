@@ -12,7 +12,7 @@ object ViewCreator {
         ctx: Context,
         userId: String,
         selectedCommand: Command? = null,
-        commandsWithAssociatedAction: List<Command> = CommandManager.commands,
+        commandsWithAssociatedAction: List<Command> = CommandManager.commands.filter(Command::visible),
     ): View = view { viewBuilder ->
         viewBuilder
             .type("home")
