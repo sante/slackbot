@@ -154,7 +154,7 @@ object CommandManager {
                Hey, thanks for sharing your feedback! :muscle:
                If you want to propose a new feature you can open a <https://github.com/xmartlabs/slackbot/discussions | GitHub Discussion> or an <https://github.com/xmartlabs/slackbot/issues | issue>.
                
-               All contributions are welcomed! :github: 
+               All contributions are welcome! :github: 
             """.trimIndent()
         },
     )
