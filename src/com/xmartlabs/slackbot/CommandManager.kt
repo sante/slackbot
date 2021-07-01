@@ -137,13 +137,13 @@ object CommandManager {
             description = "Give me more information about Frogs :pray:"
         ) { _, _ ->
             """
-               Hey, here there is useful information about Frogs:
+               Hey, here there is useful information about Frogs :frog: 
+
                • If you have no idea what is Frogs and how it works, check this <https://www.notion.so/xmartlabs/Frogs-2668aa7ab5d64f0d99f16d4233e6d5fa | link>.
                • We have new website! Check it out at <https://frogs.xmartlabs.com/ | frogs.xmartlabs.com>
-               • If you have any feedback about it, please fill in <https://docs.google.com/forms/d/1XjSTctVWQkcD7M3tx65L-2Qf0BmSg03l13agDmpfOfE/edit | this form>.
+               • Do you have any feedback about it? Please fill in <https://docs.google.com/forms/d/1XjSTctVWQkcD7M3tx65L-2Qf0BmSg03l13agDmpfOfE/edit | this form>.
 
-
-               If there is anything else you want to ask, concat our amazing chef Enzo :cook:
+               If there is anything else you want to ask, contact our amazing chef Enzo :cook:
             """.trimIndent()
         },
         Command(
