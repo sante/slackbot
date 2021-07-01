@@ -25,16 +25,16 @@ object CommandManager {
             description = "What happens in my anniversary/birthday? :tada: :birthday:"
         ) { _, _ ->
             """
-                
+
                 *Anniversary* :tada: :birthday:
-                
-                • *Aniversarios y 3 meses en la empresa:* 
-                    • Cada mes contactamos a los que cumplen su aniversario y 3 meses en la empresa. 
-                    • Entre ustedes se organizan y eligen una forma de celebrar con todos (masitas, helado, pizza, etc) :masitas: :ice_cream: :pizza: :cookie:. Puede ser lo que ustedes quieran y cuándo quieran 
-                    • En los aniversarios la empresa les organiza una comida, regalitos y sorpresas por definir :eyes: 
-                    
-                • *Cumpleaños:* 
-                    • La empresa le regala al cumpleañero un desayuno :coffee: :croissant: :chocolate_bar: 
+
+                • *Aniversarios y 3 meses en la empresa:*
+                    • Cada mes contactamos a los que cumplen su aniversario y 3 meses en la empresa.
+                    • Entre ustedes se organizan y eligen una forma de celebrar con todos (masitas, helado, pizza, etc) :masitas: :ice_cream: :pizza: :cookie:. Puede ser lo que ustedes quieran y cuándo quieran
+                    • En los aniversarios la empresa les organiza una comida, regalitos y sorpresas por definir :eyes:
+
+                • *Cumpleaños:*
+                    • La empresa le regala al cumpleañero un desayuno :coffee: :croissant: :chocolate_bar:
                     • A fin de mes se hace un festejo para todos los cumpleañeros! La empresa compra tortas, bebidas y algo para picar. :birthday: :pizza:
                 """.trimIndent()
         },
@@ -44,7 +44,7 @@ object CommandManager {
             description = "Who is in PTO? When is the next lightning talk? :calendar:",
         ) { _, _ ->
             """
-                
+
                 *Calendars* :calendar:
                     - <https://www.notion.so/xmartlabs/Setup-Calendars-URLs-40a4c5506a03429dbdccea169646a8a3 | Calendar Setup>
                 """.trimIndent()
@@ -55,8 +55,8 @@ object CommandManager {
             description = "WTF is a lightning talk :zap:?"
         ) { _, _ ->
             """
-                
-                *Lightning talks* :flashlight:: 
+
+                *Lightning talks* :flashlight::
                 Hi! The following is useful information about our lightning talks :zap:, 30 min talks where someone exposes something interesting he/she found.
 
                 • Lightning talks are added to the Eventos XL calendar :calendar: You will find the Zoom link meeting in there too :zoom:
@@ -74,9 +74,9 @@ object CommandManager {
 
                 *Recycling* :recycle:
 
-                Cosas que parecen reciclables pero no lo son 
-                • *Mezclados (Negro)*: 
-                    • Paquetes de yerba 
+                Cosas que parecen reciclables pero no lo son
+                • *Mezclados (Negro)*:
+                    • Paquetes de yerba
                     • Paquetes de café
                     • Boletos y tickets
                 • *Reciclables varios (verde):*
@@ -96,7 +96,7 @@ object CommandManager {
                     • Cascaras de frutas y verduras
                     • Restos de comida
                     • Servilletas de papel usadas
-                
+
                 Recordá que todo lo reciclable tiene que estar limpio y seco :recycle:!
                 """.trimIndent()
         },
@@ -106,9 +106,9 @@ object CommandManager {
             description = "Where should I track this? :toggl_on:"
         ) { _, _ ->
             """
-                
+
                 *Toggl* :toggl_on:
-                
+
                 • ¿Entrevistas? _Seleccion y entrevistas -> Xmartlabs_
                 • ¿Reviews? _Team Reviews -> Xmartlabs_
                 • ¿Lightning talks? _Lightning talk -> Xmartlabs_
@@ -116,9 +116,9 @@ object CommandManager {
                 • ¿1:1 con tu TL? _En tu equipo, Team X -> Xmartlabs._
                 • ¿Iniciativas? _Consulta a tu TL si la iniciativa en la que estás trabajando tiene un proyecto específico ya creado. Si es así, va en ese proyecto. En caso de que no, va dentro de tu equipo._
                 • ¿Code review o soporte a un compañero de otro proyecto? _Se trackea dentro de ese proyecto. En caso de que no lo veas en Toggl, comunicate con el PM de ese proyecto para que te agregue al team :)_
-                
+
                 En caso de tener alguna duda, consultá al equipo de operaciones o RRHH.
-              
+
                 """.trimIndent()
         },
         Command(
@@ -132,6 +132,21 @@ object CommandManager {
             """.trimIndent()
         },
         Command(
+            "frogs",
+            title = "Frogs information :frog:",
+            description = "Give me more information about Frogs :pray:"
+        ) { _, _ ->
+            """
+               Hey, here there is useful information about Frogs:
+               • If you have no idea what is Frogs and how it works, check this <https://www.notion.so/xmartlabs/Frogs-2668aa7ab5d64f0d99f16d4233e6d5fa | link>.
+               • We have new website! Check it out at <https://frogs.xmartlabs.com/ | frogs.xmartlabs.com>
+               • If you have any feedback about it, please fill in <https://docs.google.com/forms/d/1XjSTctVWQkcD7M3tx65L-2Qf0BmSg03l13agDmpfOfE/edit | this form>.
+
+
+               If there is anything else you want to ask, concat our amazing chef Enzo :cook:
+            """.trimIndent()
+        },
+        Command(
             "slack", "guidelines",
             title = "XmartLabs' Slack Guidelines :slack:",
             description = "Which are the XmartLabs' Slack guidelines? :slack:"
@@ -142,7 +157,7 @@ object CommandManager {
                *Slack* is a communicative platform which enables you to have a simple instant messaging system, having all the collaboration features you need in one place.
                It provides direct message, public and private shared, and video calls within the platform.
                <https://www.notion.so/xmartlabs/XmartLabs-guide-to-Slack-88a2386a9a6943c0bb2c9d44b316a4ac | XmartLabs' Slack Guidelines> is a quick guide on how to effectively use Slack for both internal and external communications.
-               
+
             """.trimIndent()
         },
         Command(
@@ -153,8 +168,8 @@ object CommandManager {
             """
                Hey, thanks for sharing your feedback! :muscle:
                If you want to propose a new feature you can open a <https://github.com/xmartlabs/slackbot/discussions | GitHub Discussion> or an <https://github.com/xmartlabs/slackbot/issues | issue>.
-               
-               All contributions are welcome! :github: 
+
+               All contributions are welcome! :github:
             """.trimIndent()
         },
     )
