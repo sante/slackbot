@@ -22,6 +22,7 @@ object UserChannelRepository {
             cursor = list?.responseMetadata?.nextCursor
             users += list?.members ?: listOf()
         }
+        ctx.logger.info("Remote users fetched")
         ctx.logger.debug("User fetched: " + users.joinToString { "${it.name} - ${it.id}" })
         return users
     }
@@ -38,6 +39,8 @@ object UserChannelRepository {
             cursor = list?.responseMetadata?.nextCursor
             channels += list?.channels ?: listOf()
         }
+        ctx.logger.info("Remote channels fetched")
+        ctx.logger.debug("Remote channels: " + channels.joinToString { "${it.name} - ${it.id}" })
         return channels
     }
 
@@ -47,6 +50,10 @@ object UserChannelRepository {
             .firstOrNull { it.name.equals(name, true) }
             ?.id
     }
+
+    fun getUser(ctx: Context, userId: String) =
+        cachedUsers.firstOrNull { it.id == userId }
+            ?: getRemoteUsers(ctx).firstOrNull { it.id == userId }
 
     @Synchronized
     fun toUserId(ctx: Context, membersNames: List<String>?): List<String> {

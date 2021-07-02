@@ -42,7 +42,7 @@ fun main() {
 private fun handleAppOpenedEvent(app: App) {
     app.event(AppHomeOpenedEvent::class.java) { eventPayload, ctx ->
         val event = eventPayload.event
-        ctx.logger.debug("User opened app's home, ${event.user}")
+        ctx.logger.info("User opened app's home, ${event.user}")
         val appHomeView = ViewCreator.createHomeView(
             ctx = ctx,
             userId = event.user,
@@ -101,14 +101,19 @@ private fun ViewsPublishResponse.logIfError(ctx: Context) {
 private fun handleMemberJoinedChannelEvent(app: App) {
     app.event(MemberJoinedChannelEvent::class.java) { eventPayload, ctx ->
         val event = eventPayload.event
-        val channels = UserChannelRepository.getConversations(ctx)
-        val channel = channels
-            .firstOrNull { it.id == event.channel }
-        ctx.logger.debug("New member added to ${event.channel} - ${event.user}")
-        if (channel?.name?.contains(WELCOME_CHANNEL, true) == true) {
-            ctx.say {
-                it.channel(event.channel)
-                    .text(MessageManager.getOngoardingMessage(BOT_USER_ID, listOf(event.user)))
+        val user = UserChannelRepository.getUser(ctx, event.user)
+        if (user?.isBot == true) {
+            ctx.logger.info("Onboarding message ignored, ${user.name}:${event.user} is a bot user")
+        } else {
+            val channels = UserChannelRepository.getConversations(ctx)
+            val channel = channels
+                .firstOrNull { it.id == event.channel }
+            ctx.logger.info("New member added to ${event.channel} - ${event.user}")
+            if (channel?.name?.contains(WELCOME_CHANNEL, true) == true) {
+                ctx.say {
+                    it.channel(event.channel)
+                        .text(MessageManager.getOngoardingMessage(BOT_USER_ID, listOf(event.user)))
+                }
             }
         }
         ctx.ack()
@@ -132,6 +137,6 @@ private fun processCommand(
     ctx: SlashCommandContext,
     visibleInChannel: Boolean = false,
 ): Response {
-    ctx.logger.debug("User request command, ${req.payload?.userName} - ${req.payload?.text}")
+    ctx.logger.info("User request command, ${req.payload?.userName} - ${req.payload?.text}")
     return ctx.ack(CommandManager.processCommand(ctx, req.payload, visibleInChannel))
 }
