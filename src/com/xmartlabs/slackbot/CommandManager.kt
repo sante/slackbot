@@ -128,7 +128,7 @@ object CommandManager {
         ) { _, _ ->
             """
                 *Wifi pass* :signal_strength: :key:
-                Internal: Xmartlabs33, Guests: xlinvitado
+                Internal: $XL_PASSWORD, Guests: $XL_GUEST_PASSWORD
             """.trimIndent()
         },
         Command(

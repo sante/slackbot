@@ -19,6 +19,8 @@ private const val PROTECTED_CHANNEL_MESSAGE =
 @Suppress("MagicNumber")
 private val PORT = System.getenv("PORT")?.toIntOrNull() ?: 3000
 val BOT_USER_ID = System.getenv("BOT_USER_ID") ?: "U025KD1C28K"
+val XL_PASSWORD = System.getenv("XL_PASSWORD") ?: "*********"
+val XL_GUEST_PASSWORD = System.getenv("XL_GUEST_PASSWORD") ?: "*********"
 
 private val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
 
