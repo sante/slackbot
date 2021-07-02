@@ -27,7 +27,7 @@ private val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
 fun main(args: Array<String>) {
     val app = App()
         .command("/xlbot") { req, ctx -> processCommand(req, ctx) }
-        .command("/slackhelp") { req, ctx -> processCommand(req, ctx, visibleInChannel = true) }
+        .command("/xlbot-visible") { req, ctx -> processCommand(req, ctx, visibleInChannel = true) }
         .command("/onboarding") { req, ctx -> sendOnboardingCommand(req, ctx) }
 
     handleMemberJoinedChannelEvent(app)
