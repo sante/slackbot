@@ -15,7 +15,7 @@ object CommandManager {
             description = "Do you know what you have to do when you onboard to :xl: ?"
         ) { payloadText, context ->
             val peoplePayloadText = getMembersFromCommandText(context, payloadText)
-            MessageManager.getOngoardingMessage(UserChannelRepository.toUserId(context, XL_BOT_NAME), peoplePayloadText)
+            MessageManager.getOngoardingMessage(BOT_USER_ID, peoplePayloadText)
         }
 
     val commands = listOf(onboarding) + listOf(
@@ -163,7 +163,7 @@ object CommandManager {
         Command(
             "feedback",
             title = "Share XlBot feedback! :writing_hand:",
-            description = "How can I share XlBot feedback? :slack: :writing_hand:"
+            description = "How can I share XlBot feedback? :robot_face: :writing_hand:"
         ) { _, _ ->
             """
                Hey, thanks for sharing your feedback! :muscle:
@@ -181,12 +181,7 @@ object CommandManager {
                 .blocks(withBlocks {
                     section {
                         markdownText(
-                            "Hi :wave:! Check XL useful <@${
-                                UserChannelRepository.toUserId(
-                                    context,
-                                    XL_BOT_NAME
-                                )
-                            }> commands! :slack:"
+                            "Hi :wave:! Check XL useful <@$BOT_USER_ID> commands! :slack:"
                         )
                     }
 
@@ -214,8 +209,7 @@ object CommandManager {
                 .joinToString(" \n") { command ->
                     "• *${command.title}*: $${command.description}"
                 }
-            val botUser = UserChannelRepository.toUserId(context, XL_BOT_NAME)
-            "\nHi :wave:! Check XL useful <@$botUser> commands! :slack:\n\n$options"
+            "\nHi :wave:! Check XL useful <@$BOT_USER_ID> commands! :slack:\n\n$options"
         },
     )
 

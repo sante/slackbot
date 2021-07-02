@@ -15,10 +15,12 @@ import com.slack.api.model.event.MemberJoinedChannelEvent
 private val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
 private const val PROTECTED_CHANNEL_MESSAGE =
     "Hi :wave:\nPublic visible messages shouldn't be sent in protected channels"
-private const val DEFAULT_PORT = 3000
 
-private const val WELCOME_CHANNEL = "random"
-const val XL_BOT_NAME = "xlbot2" // ID: U025KD1C28K
+@Suppress("MagicNumber")
+private val PORT = System.getenv("PORT")?.toIntOrNull() ?: 3000
+val BOT_USER_ID = System.getenv("BOT_USER_ID") ?: "U025KD1C28K"
+
+private val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
 
 fun main(args: Array<String>) {
     val app = App()
@@ -29,9 +31,7 @@ fun main(args: Array<String>) {
     handleMemberJoinedChannelEvent(app)
     handleAppOpenedEvent(app)
 
-    val port = System.getenv("PORT")?.toIntOrNull() ?: DEFAULT_PORT
-
-    val server = SlackAppServer(app, "/slack/events", port)
+    val server = SlackAppServer(app, "/slack/events", PORT)
     server.start() // http://localhost:3000/slack/events
 }
 
@@ -92,7 +92,7 @@ private fun handleMemberJoinedChannelEvent(app: App) {
         if (channel?.name?.contains(WELCOME_CHANNEL, true) == true) {
             ctx.say {
                 it.channel(event.channel)
-                    .text(MessageManager.getOngoardingMessage(XL_BOT_NAME, listOf(event.user)))
+                    .text(MessageManager.getOngoardingMessage(BOT_USER_ID, listOf(event.user)))
             }
         }
         ctx.ack()
