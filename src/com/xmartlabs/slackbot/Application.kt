@@ -1,5 +1,6 @@
 package com.xmartlabs.slackbot
 
+import com.slack.api.app_backend.interactive_components.response.ActionResponse
 import com.slack.api.app_backend.slash_commands.response.SlashCommandResponse
 import com.slack.api.bolt.App
 import com.slack.api.bolt.context.Context
@@ -21,10 +22,11 @@ private val PORT = System.getenv("PORT")?.toIntOrNull() ?: 3000
 val BOT_USER_ID = System.getenv("BOT_USER_ID") ?: "U025KD1C28K"
 val XL_PASSWORD = System.getenv("XL_PASSWORD") ?: "*********"
 val XL_GUEST_PASSWORD = System.getenv("XL_GUEST_PASSWORD") ?: "*********"
+const val ACTION_VALUE_VISIBLE = "visible-in-channel"
 
 private val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
 
-fun main(args: Array<String>) {
+fun main() {
     val app = App()
         .command("/xlbot") { req, ctx -> processCommand(req, ctx) }
         .command("/xlbot-visible") { req, ctx -> processCommand(req, ctx, visibleInChannel = true) }
@@ -40,6 +42,7 @@ fun main(args: Array<String>) {
 private fun handleAppOpenedEvent(app: App) {
     app.event(AppHomeOpenedEvent::class.java) { eventPayload, ctx ->
         val event = eventPayload.event
+        ctx.logger.debug("User opened app's home, ${event.user}")
         val appHomeView = ViewCreator.createHomeView(
             ctx = ctx,
             userId = event.user,
@@ -57,9 +60,20 @@ private fun handleAppOpenedEvent(app: App) {
     CommandManager.commands
         .forEach { command ->
             app.blockAction(command.buttonActionId) { req, ctx ->
+                ctx.logger.error(req.payload.actions.toString() + " - " + req.payload.actions?.get(0)?.value)
+                val visibleInChannel =
+                    ACTION_VALUE_VISIBLE.equals(req.payload.actions?.get(0)?.value, ignoreCase = true)
                 if (req.payload.responseUrl != null) {
                     // Post a message to the same channel if it's a block in a message
-                    ctx.respond(command.answerText(null, ctx))
+                    ctx.respond(
+                        ActionResponse.builder()
+                            .text(command.answerText(null, ctx))
+                            .responseType(if (visibleInChannel) ResponseTypes.inChannel else ResponseTypes.ephemeral)
+                            // It's deleted because the visibility can be changed
+                            .also { it.deleteOriginal(visibleInChannel) }
+                            .also { it.replaceOriginal(!visibleInChannel) }
+                            .build()
+                    )
                 } else {
                     val user = req.payload.user.id
                     val appHomeView = ViewCreator.createHomeView(
@@ -117,4 +131,7 @@ private fun processCommand(
     req: SlashCommandRequest,
     ctx: SlashCommandContext,
     visibleInChannel: Boolean = false,
-): Response = ctx.ack(CommandManager.processCommand(ctx, req.payload, visibleInChannel))
+): Response {
+    ctx.logger.debug("User request command, ${req.payload?.userName} - ${req.payload?.text}")
+    return ctx.ack(CommandManager.processCommand(ctx, req.payload, visibleInChannel))
+}

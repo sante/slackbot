@@ -122,7 +122,7 @@ object CommandManager {
                 """.trimIndent()
         },
         Command(
-            "wifi pass",
+            "wifi",
             title = "Wifi pass :signal_strength:",
             description = "Do you know Xmartlabs' office WIFI password? :signal_strength: :key:"
         ) { _, _ ->
@@ -176,7 +176,7 @@ object CommandManager {
 
     private val default = Command(
         title = "Help Command",
-        answerResponse = { _, context, _ ->
+        answerResponse = { _, ctx, visibleInChannel ->
             SlashCommandResponse.builder()
                 .blocks(withBlocks {
                     section {
@@ -192,7 +192,9 @@ object CommandManager {
                                 button {
                                     actionId(command.buttonActionId)
                                     text(command.title, emoji = true)
-                                    value(command.keys.first())
+                                    if (visibleInChannel) {
+                                        value(ACTION_VALUE_VISIBLE)
+                                    }
                                 }
                                 if (!command.description.isNullOrBlank()) {
                                     markdownText("• ${command.description}", true)
@@ -203,7 +205,7 @@ object CommandManager {
                 .responseType(ResponseTypes.ephemeral) // Force it
                 .build()
         },
-        answerText = { _, context ->
+        answerText = { _, _ ->
             val options = commands
                 .filter(Command::visible)
                 .joinToString(" \n") { command ->
