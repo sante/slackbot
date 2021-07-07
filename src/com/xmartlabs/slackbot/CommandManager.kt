@@ -122,13 +122,27 @@ object CommandManager {
                 """.trimIndent()
         },
         Command(
+            "time off", "vacations",
+            title = " Time Off :beach_with_umbrella:",
+            description = "How should I request my days off? :beach_with_umbrella:"
+        ) { _, _ ->
+            """
+
+                *Time Off* :beach_with_umbrella:
+
+                The vacation policy can be checked in <https://www.notion.so/xmartlabs/Vacation-Policy-c528945eaa5741259b686442233c8021 | Notion>. It has useful information that you should check before requesting time off.
+                
+                In order to do so, <https://xmartlabs.bamboohr.com/time_off/requests/create | please follow the steps in this form>. To expedite the process,  validate your request with your manager/PM before submitting it. Make sure you plan ahead of time since we always need to validate your time off with the client.
+                """.trimIndent()
+        },
+        Command(
             "wifi",
             title = "Wifi pass :signal_strength:",
             description = "Do you know Xmartlabs' office WIFI password? :signal_strength: :key:"
         ) { _, _ ->
             """
                 *Wifi pass* :signal_strength: :key:
-                Internal: $XL_PASSWORD, Guests: $XL_GUEST_PASSWORD
+                Internal: `$XL_PASSWORD`, Guests: `$XL_GUEST_PASSWORD`
             """.trimIndent()
         },
         Command(
@@ -176,7 +190,7 @@ object CommandManager {
 
     private val default = Command(
         title = "Help Command",
-        answerResponse = { _, ctx, visibleInChannel ->
+        answerResponse = { _, _, visibleInChannel ->
             SlashCommandResponse.builder()
                 .blocks(withBlocks {
                     section {
