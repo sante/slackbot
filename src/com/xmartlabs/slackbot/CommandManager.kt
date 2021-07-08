@@ -74,11 +74,6 @@ object CommandManager {
 
                 *Recycling* :recycle:
 
-                Cosas que parecen reciclables pero no lo son
-                • *Mezclados (Negro)*:
-                    • Paquetes de yerba
-                    • Paquetes de café
-                    • Boletos y tickets
                 • *Reciclables varios (verde):*
                     • Caja de leche (Tetrapak)
                     • Envoltorios de galletas (Todos)
@@ -96,8 +91,12 @@ object CommandManager {
                     • Cascaras de frutas y verduras
                     • Restos de comida
                     • Servilletas de papel usadas
+                • *Mezclados (Negro)*:
+                    • Paquetes de yerba
+                    • Paquetes de café
+                    • Boletos y tickets
 
-                Recordá que todo lo reciclable tiene que estar limpio y seco :recycle:!
+                *Recordá que todo lo reciclable tiene que estar limpio, seco y compactado!* :recycle:
                 """.trimIndent()
         },
         Command(
