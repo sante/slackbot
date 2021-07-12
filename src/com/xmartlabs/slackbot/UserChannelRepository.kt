@@ -8,6 +8,8 @@ import com.slack.api.model.ConversationType
 import com.slack.api.model.User
 
 object UserChannelRepository {
+    private const val SLACKBOT_UID = "USLACKBOT"
+
     private const val PAGE_LIMIT = 1000
     private var cachedUsers: List<User> = listOf()
 
@@ -50,6 +52,17 @@ object UserChannelRepository {
             .firstOrNull { it.name.equals(name, true) }
             ?.id
     }
+
+    fun getUsers(ctx: Context) =
+        cachedUsers.ifEmpty { getRemoteUsers(ctx) }
+
+    fun getActiveUsers(ctx: Context) = getUsers(ctx)
+        .asSequence()
+        .filterNot { it.isBot }
+        .filterNot { it.isAppUser }
+        .filterNot { it.id == SLACKBOT_UID }
+        .filterNot { it.isDeleted }
+        .toList()
 
     fun getUser(ctx: Context, userId: String) =
         cachedUsers.firstOrNull { it.id == userId }

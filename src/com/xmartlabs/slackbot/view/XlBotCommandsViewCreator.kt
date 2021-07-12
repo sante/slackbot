@@ -1,11 +1,14 @@
-package com.xmartlabs.slackbot
+package com.xmartlabs.slackbot.view
 
 import com.slack.api.bolt.context.Context
 import com.slack.api.model.kotlin_extension.view.blocks
 import com.slack.api.model.view.View
 import com.slack.api.model.view.Views.view
+import com.xmartlabs.slackbot.Command
+import com.xmartlabs.slackbot.CommandManager
+import com.xmartlabs.slackbot.buttonActionId
 
-object ViewCreator {
+object XlBotCommandsViewCreator {
     private const val NUMBER_OF_COLUMNS = 5
 
     fun createHomeView(

@@ -1,21 +1,19 @@
 package com.xmartlabs.slackbot
 
-import com.slack.api.app_backend.interactive_components.response.ActionResponse
-import com.slack.api.app_backend.slash_commands.response.SlashCommandResponse
 import com.slack.api.bolt.App
-import com.slack.api.bolt.context.Context
-import com.slack.api.bolt.context.builtin.SlashCommandContext
 import com.slack.api.bolt.jetty.SlackAppServer
-import com.slack.api.bolt.request.builtin.SlashCommandRequest
-import com.slack.api.bolt.response.Response
-import com.slack.api.bolt.response.ResponseTypes
-import com.slack.api.methods.response.views.ViewsPublishResponse
 import com.slack.api.model.event.AppHomeOpenedEvent
 import com.slack.api.model.event.MemberJoinedChannelEvent
+import com.xmartlabs.slackbot.handlers.AppHomeOpenedEventEventHandler
+import com.xmartlabs.slackbot.handlers.ApprovalRequestViewSubmissionHandler
+import com.xmartlabs.slackbot.handlers.CommandActionHandler
+import com.xmartlabs.slackbot.handlers.CreateAnnouncementGlobalShortcutHandler
+import com.xmartlabs.slackbot.handlers.MemberJoinedChannelEventHandler
+import com.xmartlabs.slackbot.handlers.OnboardingSlashCommandHandler
+import com.xmartlabs.slackbot.handlers.ProcessXlBotHelpCommandCommandHandler
+import com.xmartlabs.slackbot.view.AnnouncementViewCreator
 
-private val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
-private const val PROTECTED_CHANNEL_MESSAGE =
-    "Hi :wave:\nPublic visible messages shouldn't be sent in protected channels"
+val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
 
 @Suppress("MagicNumber")
 private val PORT = System.getenv("PORT")?.toIntOrNull() ?: 3000
@@ -24,119 +22,45 @@ val XL_PASSWORD = System.getenv("XL_PASSWORD") ?: "*********"
 val XL_GUEST_PASSWORD = System.getenv("XL_GUEST_PASSWORD") ?: "*********"
 const val ACTION_VALUE_VISIBLE = "visible-in-channel"
 
-private val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
+val USERS_WITH_ADMIN_PRIVILEGES =
+    System.getenv("USERS_WITH_ADMIN_PRIVILEGES")?.split(",") ?: emptyList()
+val ANNOUNCEMENTS_ENABLED =
+    System.getenv("ANNOUNCEMENTS_ENABLED")?.toBoolean() ?: false
+val ANNOUNCEMENTS_PROTECTED_FEATURE =
+    System.getenv("ANNOUNCEMENTS_PROTECTED_FEATURE")?.toBoolean() ?: true
+
+val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
 
 fun main() {
     val app = App()
-        .command("/xlbot") { req, ctx -> processCommand(req, ctx) }
-        .command("/xlbot-visible") { req, ctx -> processCommand(req, ctx, visibleInChannel = true) }
-        .command("/onboarding") { req, ctx -> sendOnboardingCommand(req, ctx) }
+        .command("/xlbot", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = false))
+        .command("/xlbot-visible", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = true))
+        .command("/onboarding", OnboardingSlashCommandHandler())
 
     handleMemberJoinedChannelEvent(app)
     handleAppOpenedEvent(app)
-
+    handleShortcut(app)
     val server = SlackAppServer(app, "/slack/events", PORT)
     server.start() // http://localhost:3000/slack/events
 }
 
+fun handleShortcut(app: App) {
+    // Handles global shortcut requests
+    app.globalShortcut(
+        AnnouncementViewCreator.CREATE_ANNOUNCEMENT_MODAL_CALLBACK_ID,
+        CreateAnnouncementGlobalShortcutHandler()
+    )
+    app.viewSubmission(
+        AnnouncementViewCreator.CREATE_ANNOUNCEMENT_REQUEST_CALLBACK_ID,
+        ApprovalRequestViewSubmissionHandler()
+    )
+}
+
 private fun handleAppOpenedEvent(app: App) {
-    app.event(AppHomeOpenedEvent::class.java) { eventPayload, ctx ->
-        val event = eventPayload.event
-        ctx.logger.info("User opened app's home, ${event.user}")
-        val appHomeView = ViewCreator.createHomeView(
-            ctx = ctx,
-            userId = event.user,
-            selectedCommand = null
-        )
-
-        // Update the App Home for the given user
-        ctx.client().viewsPublish {
-            it.userId(event.user)
-                .hash(event.view?.hash) // To protect against possible race conditions
-                .view(appHomeView)
-        }.logIfError(ctx)
-        ctx.ack()
-    }
+    app.event(AppHomeOpenedEvent::class.java, AppHomeOpenedEventEventHandler())
     CommandManager.commands
-        .forEach { command ->
-            app.blockAction(command.buttonActionId) { req, ctx ->
-                ctx.logger.error(req.payload.actions.toString() + " - " + req.payload.actions?.get(0)?.value)
-                val visibleInChannel =
-                    ACTION_VALUE_VISIBLE.equals(req.payload.actions?.get(0)?.value, ignoreCase = true)
-                if (req.payload.responseUrl != null) {
-                    // Post a message to the same channel if it's a block in a message
-                    ctx.respond(
-                        ActionResponse.builder()
-                            .text(command.answerText(null, ctx))
-                            .responseType(if (visibleInChannel) ResponseTypes.inChannel else ResponseTypes.ephemeral)
-                            // It's deleted because the visibility can be changed
-                            .also { it.deleteOriginal(visibleInChannel) }
-                            .also { it.replaceOriginal(!visibleInChannel) }
-                            .build()
-                    )
-                } else {
-                    val user = req.payload.user.id
-                    val appHomeView = ViewCreator.createHomeView(
-                        ctx = ctx,
-                        userId = user,
-                        commandsWithAssociatedAction = CommandManager.commands,
-                        selectedCommand = command
-                    )
-                    // Update the App Home for the given user
-                    ctx.client().viewsPublish {
-                        it.userId(user)
-                            .hash(req.payload.view?.hash) // To protect against possible race conditions
-                            .view(appHomeView)
-                    }.logIfError(ctx)
-                }
-                ctx.ack()
-            }
-        }
+        .forEach { command -> app.blockAction(command.buttonActionId, CommandActionHandler(command)) }
 }
 
-private fun ViewsPublishResponse.logIfError(ctx: Context) {
-    if (!isOk) ctx.logger.warn("Update home error: $this")
-}
-
-private fun handleMemberJoinedChannelEvent(app: App) {
-    app.event(MemberJoinedChannelEvent::class.java) { eventPayload, ctx ->
-        val event = eventPayload.event
-        val user = UserChannelRepository.getUser(ctx, event.user)
-        if (user?.isBot == true) {
-            ctx.logger.info("Onboarding message ignored, ${user.name}:${event.user} is a bot user")
-        } else {
-            val channels = UserChannelRepository.getConversations(ctx)
-            val channel = channels
-                .firstOrNull { it.id == event.channel }
-            ctx.logger.info("New member added to ${event.channel} - ${event.user}")
-            if (channel?.name?.contains(WELCOME_CHANNEL, true) == true) {
-                ctx.say {
-                    it.channel(event.channel)
-                        .text(MessageManager.getOngoardingMessage(BOT_USER_ID, listOf(event.user)))
-                }
-            }
-        }
-        ctx.ack()
-    }
-}
-
-fun sendOnboardingCommand(req: SlashCommandRequest, ctx: SlashCommandContext): Response =
-    if (req.payload.channelName in PROTECTED_CHANNELS_NAMES) {
-        ctx.ack(PROTECTED_CHANNEL_MESSAGE)
-    } else {
-        val command = CommandManager.onboarding
-        val response = SlashCommandResponse.builder()
-            .text(command.answerText(req.payload?.text, ctx))
-            .responseType(ResponseTypes.inChannel)
-            .build()
-        ctx.ack(response)
-    }
-
-private fun processCommand(
-    req: SlashCommandRequest,
-    ctx: SlashCommandContext,
-    visibleInChannel: Boolean = false,
-): Response {
-    ctx.logger.info("User request command, ${req.payload?.userName} - ${req.payload?.text}")
-    return ctx.ack(CommandManager.processCommand(ctx, req.payload, visibleInChannel))
-}
+private fun handleMemberJoinedChannelEvent(app: App) =
+    app.event(MemberJoinedChannelEvent::class.java, MemberJoinedChannelEventHandler())
