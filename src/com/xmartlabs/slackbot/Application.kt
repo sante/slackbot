@@ -54,6 +54,7 @@ fun handleShortcut(app: App) {
         AnnouncementViewCreator.CREATE_ANNOUNCEMENT_REQUEST_CALLBACK_ID,
         ApprovalRequestViewSubmissionHandler()
     )
+    app.blockAction(AnnouncementViewCreator.userFilterModeInputActionId) { _, req -> req.ack() }
 }
 
 private fun handleAppOpenedEvent(app: App) {

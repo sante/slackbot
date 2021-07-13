@@ -3,6 +3,7 @@ package com.xmartlabs.slackbot.view
 import com.slack.api.app_backend.views.payload.ViewSubmissionPayload
 import com.slack.api.bolt.context.builtin.ViewSubmissionContext
 import com.slack.api.model.block.Blocks
+import com.slack.api.model.block.element.StaticSelectElement
 import com.slack.api.model.kotlin_extension.block.InputBlockBuilder
 import com.slack.api.model.kotlin_extension.block.SectionBlockBuilder
 import com.slack.api.model.kotlin_extension.block.withBlocks
@@ -87,6 +88,8 @@ object AnnouncementViewCreator {
 
     val usersToFilterBlockId: String
         get() = usersToFilterInput.blockId
+    val userFilterModeInputActionId: String
+        get() = (userFilterModeInput.accessory as StaticSelectElement).actionId
 
     fun createAnnouncementRequest(): View {
         return view { thisView ->
