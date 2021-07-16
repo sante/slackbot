@@ -78,6 +78,8 @@ object CommandManager {
                     • Caja de leche (Tetrapak)
                     • Envoltorios de galletas (Todos)
                     • Doypack (Envases de mayonesa, etc)
+                    • Tapas de vasos descartables (Morgan, McCafe, etc)
+
                 • *Envases plásticos (Amarillo):*
                     • Botellas de plástico
                     • Cualquier plástico que tenga el símbolo :recycle: 1 - PET o :recycle: 2 - PEAD
@@ -94,7 +96,9 @@ object CommandManager {
                 • *Mezclados (Negro)*:
                     • Paquetes de yerba
                     • Paquetes de café
-                    • Boletos y tickets
+                    • Boletos y tickets (papel térmico)
+                    • Vasos descartables de papel (Morgan, McCafe, etc)
+
 
                 *Recordá que todo lo reciclable tiene que estar limpio, seco y compactado!* :recycle:
                 """.trimIndent()
