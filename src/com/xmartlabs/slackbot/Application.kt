@@ -4,14 +4,19 @@ import com.slack.api.bolt.App
 import com.slack.api.bolt.jetty.SlackAppServer
 import com.slack.api.model.event.AppHomeOpenedEvent
 import com.slack.api.model.event.MemberJoinedChannelEvent
+import com.xmartlabs.slackbot.handlers.AnnouncementConfirmationViewSubmissionHandler
+import com.xmartlabs.slackbot.handlers.AnnouncementCreationRequestViewSubmissionHandler
 import com.xmartlabs.slackbot.handlers.AppHomeOpenedEventEventHandler
-import com.xmartlabs.slackbot.handlers.ApprovalRequestViewSubmissionHandler
 import com.xmartlabs.slackbot.handlers.CommandActionHandler
 import com.xmartlabs.slackbot.handlers.CreateAnnouncementGlobalShortcutHandler
 import com.xmartlabs.slackbot.handlers.MemberJoinedChannelEventHandler
 import com.xmartlabs.slackbot.handlers.OnboardingSlashCommandHandler
 import com.xmartlabs.slackbot.handlers.ProcessXlBotHelpCommandCommandHandler
 import com.xmartlabs.slackbot.view.AnnouncementViewCreator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 
 val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
 
@@ -40,11 +45,19 @@ fun main() {
     handleMemberJoinedChannelEvent(app)
     handleAppOpenedEvent(app)
     handleShortcut(app)
+    prefetchData(app)
     val server = SlackAppServer(app, "/slack/events", PORT)
     server.start() // http://localhost:3000/slack/events
 }
 
-fun handleShortcut(app: App) {
+private fun prefetchData(app: App) {
+    GlobalScope.launch(Dispatchers.IO) {
+        val logger = LoggerFactory.getLogger(App::class.java)
+        UserChannelRepository.reloadCache(logger, app.client())
+    }
+}
+
+private fun handleShortcut(app: App) {
     // Handles global shortcut requests
     app.globalShortcut(
         AnnouncementViewCreator.CREATE_ANNOUNCEMENT_MODAL_CALLBACK_ID,
@@ -52,7 +65,11 @@ fun handleShortcut(app: App) {
     )
     app.viewSubmission(
         AnnouncementViewCreator.CREATE_ANNOUNCEMENT_REQUEST_CALLBACK_ID,
-        ApprovalRequestViewSubmissionHandler()
+        AnnouncementCreationRequestViewSubmissionHandler()
+    )
+    app.viewSubmission(
+        AnnouncementViewCreator.CREATE_ANNOUNCEMENT_REQUEST_CONFIRMATION_CALLBACK_ID,
+        AnnouncementConfirmationViewSubmissionHandler()
     )
     app.blockAction(AnnouncementViewCreator.userFilterModeInputActionId) { _, req -> req.ack() }
 }

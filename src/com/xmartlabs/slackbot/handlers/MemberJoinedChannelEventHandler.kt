@@ -17,7 +17,7 @@ class MemberJoinedChannelEventHandler : BoltEventHandler<MemberJoinedChannelEven
         if (user?.isBot == true) {
             ctx.logger.info("Onboarding message ignored, ${user.name}:${event.user} is a bot user")
         } else {
-            val channels = UserChannelRepository.getConversations(ctx)
+            val channels = UserChannelRepository.getRemoteConversations(ctx)
             val channel = channels
                 .firstOrNull { it.id == event.channel }
             ctx.logger.info("New member added to ${event.channel} - ${event.user}")
