@@ -1,5 +1,6 @@
 package com.xmartlabs.slackbot
 
+import com.slack.api.Slack
 import com.slack.api.bolt.context.Context
 import com.slack.api.methods.MethodsClient
 import com.slack.api.methods.request.conversations.ConversationsListRequest
@@ -10,17 +11,20 @@ import com.slack.api.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 object UserChannelRepository {
     private const val SLACKBOT_UID = "USLACKBOT"
+    private val logger = LoggerFactory.getLogger(UserChannelRepository::class.java)
+    private val slackMethods = Slack.getInstance().methods(SLACK_TOKEN)
 
     private const val PAGE_LIMIT = 1000
     private var cachedUsers: List<User> = listOf()
     private var cachedChannels: List<Conversation> = listOf()
 
-    suspend fun reloadCache(logger: Logger, client: MethodsClient) = withContext(Dispatchers.IO) {
-        getRemoteUsers(logger, client)
-        getRemoteConversations(logger, client)
+    suspend fun reloadCache() = withContext(Dispatchers.IO) {
+        getRemoteUsers(logger, slackMethods)
+        getRemoteConversations(logger, slackMethods)
     }
 
     private fun getRemoteUsers(ctx: Context): List<User> =
@@ -29,14 +33,17 @@ object UserChannelRepository {
     private fun getRemoteUsers(logger: Logger, client: MethodsClient): List<User> {
         val users = mutableListOf<User>()
         var cursor: String? = null
-        while (cursor != "") {
+        do {
             val req = UsersListRequest.builder()
                 .limit(PAGE_LIMIT)
                 .let { if (cursor != null) it.cursor(cursor).build() else it.build() }
-            val list = client.usersList(req)
-            cursor = list?.responseMetadata?.nextCursor
-            users += list?.members ?: listOf()
-        }
+            val listResponse = client.usersList(req)
+            if (!listResponse.isOk) {
+                throw IllegalStateException("Error getting remote users. Error: ${listResponse.error}")
+            }
+            cursor = listResponse?.responseMetadata?.nextCursor
+            users += listResponse?.members ?: listOf()
+        } while (!cursor.isNullOrBlank())
         logger.info("Remote users fetched")
         logger.debug("User fetched: " + users.joinToString { "${it.name} - ${it.id}" })
         return users
@@ -49,15 +56,18 @@ object UserChannelRepository {
     fun getRemoteConversations(logger: Logger, client: MethodsClient): List<Conversation> {
         val channels = mutableListOf<Conversation>()
         var cursor: String? = null
-        while (cursor != "") {
+        do {
             val req = ConversationsListRequest.builder()
                 .limit(PAGE_LIMIT)
                 .types(listOf(ConversationType.PUBLIC_CHANNEL))
                 .let { if (cursor != null) it.cursor(cursor).build() else it.build() }
-            val list = client.conversationsList(req)
-            cursor = list?.responseMetadata?.nextCursor
-            channels += list?.channels ?: listOf()
-        }
+            val listResponse = client.conversationsList(req)
+            if (!listResponse.isOk) {
+                throw IllegalStateException("Error getting remote channels. Error: ${listResponse.error}")
+            }
+            cursor = listResponse?.responseMetadata?.nextCursor
+            channels += listResponse?.channels ?: listOf()
+        } while (!cursor.isNullOrBlank())
         logger.info("Remote channels fetched")
         logger.debug("Remote channels: " + channels.joinToString { "${it.name} - ${it.id}" })
         return channels

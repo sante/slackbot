@@ -16,9 +16,10 @@ import com.xmartlabs.slackbot.view.AnnouncementViewCreator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
 
 val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
+
+val SLACK_TOKEN = System.getenv("SLACK_BOT_TOKEN")
 
 @Suppress("MagicNumber")
 private val PORT = System.getenv("PORT")?.toIntOrNull() ?: 3000
@@ -37,6 +38,13 @@ val ANNOUNCEMENTS_PROTECTED_FEATURE =
 val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
 
 fun main() {
+    // Check slack keys
+    requireNotNull(System.getenv("SLACK_BOT_TOKEN")) {
+        "SLACK_BOT_TOKEN is missing"
+    }
+    requireNotNull(System.getenv("SLACK_SIGNING_SECRET")) {
+        "SLACK_SIGNING_SECRET is missing"
+    }
     val app = App()
         .command("/xlbot", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = false))
         .command("/xlbot-visible", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = true))
@@ -45,15 +53,14 @@ fun main() {
     handleMemberJoinedChannelEvent(app)
     handleAppOpenedEvent(app)
     handleShortcut(app)
-    prefetchData(app)
+    prefetchData()
     val server = SlackAppServer(app, "/slack/events", PORT)
     server.start() // http://localhost:3000/slack/events
 }
 
-private fun prefetchData(app: App) {
+private fun prefetchData() {
     GlobalScope.launch(Dispatchers.IO) {
-        val logger = LoggerFactory.getLogger(App::class.java)
-        UserChannelRepository.reloadCache(logger, app.client())
+        UserChannelRepository.reloadCache()
     }
 }
 
