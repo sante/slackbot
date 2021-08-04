@@ -5,7 +5,7 @@ import com.slack.api.model.kotlin_extension.view.blocks
 import com.slack.api.model.view.View
 import com.slack.api.model.view.Views.view
 import com.xmartlabs.slackbot.Command
-import com.xmartlabs.slackbot.CommandManager
+import com.xmartlabs.slackbot.manager.CommandManager
 import com.xmartlabs.slackbot.buttonActionId
 
 object XlBotCommandsViewCreator {

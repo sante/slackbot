@@ -12,39 +12,17 @@ import com.xmartlabs.slackbot.handlers.CreateAnnouncementGlobalShortcutHandler
 import com.xmartlabs.slackbot.handlers.MemberJoinedChannelEventHandler
 import com.xmartlabs.slackbot.handlers.OnboardingSlashCommandHandler
 import com.xmartlabs.slackbot.handlers.ProcessXlBotHelpCommandCommandHandler
+import com.xmartlabs.slackbot.manager.CommandManager
+import com.xmartlabs.slackbot.usecases.RemindInvalidEntryTogglUseCase
 import com.xmartlabs.slackbot.view.AnnouncementViewCreator
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
-
-val SLACK_TOKEN = System.getenv("SLACK_BOT_TOKEN")
-
-@Suppress("MagicNumber")
-private val PORT = System.getenv("PORT")?.toIntOrNull() ?: 3000
-val BOT_USER_ID = System.getenv("BOT_USER_ID") ?: "U025KD1C28K"
-val XL_PASSWORD = System.getenv("XL_PASSWORD") ?: "*********"
-val XL_GUEST_PASSWORD = System.getenv("XL_GUEST_PASSWORD") ?: "*********"
-const val ACTION_VALUE_VISIBLE = "visible-in-channel"
-
-val USERS_WITH_ADMIN_PRIVILEGES =
-    System.getenv("USERS_WITH_ADMIN_PRIVILEGES")?.split(",") ?: emptyList()
-val ANNOUNCEMENTS_ENABLED =
-    System.getenv("ANNOUNCEMENTS_ENABLED")?.toBoolean() ?: false
-val ANNOUNCEMENTS_PROTECTED_FEATURE =
-    System.getenv("ANNOUNCEMENTS_PROTECTED_FEATURE")?.toBoolean() ?: true
-
-val WELCOME_CHANNEL = System.getenv("WELCOME_CHANNEL_NAME") ?: "random"
+val logger: Logger = LoggerFactory.getLogger("default")
 
 fun main() {
-    // Check slack keys
-    requireNotNull(System.getenv("SLACK_BOT_TOKEN")) {
-        "SLACK_BOT_TOKEN is missing"
-    }
-    requireNotNull(System.getenv("SLACK_SIGNING_SECRET")) {
-        "SLACK_SIGNING_SECRET is missing"
-    }
     val app = App()
         .command("/xlbot", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = false))
         .command("/xlbot-visible", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = true))
@@ -53,14 +31,19 @@ fun main() {
     handleMemberJoinedChannelEvent(app)
     handleAppOpenedEvent(app)
     handleShortcut(app)
-    prefetchData()
-    val server = SlackAppServer(app, "/slack/events", PORT)
+    setupTooglReminders()
+    val server = SlackAppServer(app, "/slack/events", Config.PORT)
     server.start() // http://localhost:3000/slack/events
 }
 
-private fun prefetchData() {
-    GlobalScope.launch(Dispatchers.IO) {
-        UserChannelRepository.reloadCache()
+fun setupTooglReminders() {
+    if (Config.TOGGL_REPORTS_ENABLED) {
+        GlobalScope.launch {
+            kotlin.runCatching { RemindInvalidEntryTogglUseCase().execute() }
+                .onFailure { logger.error("Error sending toggl reminders", it) }
+        }
+    } else {
+        logger.info("Toggl reports are not enabled")
     }
 }
 

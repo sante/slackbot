@@ -1,10 +1,14 @@
-package com.xmartlabs.slackbot
+package com.xmartlabs.slackbot.manager
 
 import com.slack.api.app_backend.slash_commands.payload.SlashCommandPayload
 import com.slack.api.app_backend.slash_commands.response.SlashCommandResponse
 import com.slack.api.bolt.context.Context
 import com.slack.api.bolt.response.ResponseTypes
 import com.slack.api.model.kotlin_extension.block.withBlocks
+import com.xmartlabs.slackbot.Command
+import com.xmartlabs.slackbot.Config
+import com.xmartlabs.slackbot.buttonActionId
+import com.xmartlabs.slackbot.repositories.UserSlackRepository
 
 @Suppress("MaxLineLength")
 object CommandManager {
@@ -14,8 +18,8 @@ object CommandManager {
             title = "Onboarding :wave: :xl:",
             description = "Do you know what you have to do when you onboard to :xl: ?"
         ) { payloadText, context ->
-            val peoplePayloadText = getMembersFromCommandText(context, payloadText)
-            MessageManager.getOngoardingMessage(BOT_USER_ID, peoplePayloadText)
+            val peoplePayloadText = getMembersFromCommandText(payloadText)
+            MessageManager.getOngoardingMessage(Config.BOT_USER_ID, peoplePayloadText)
         }
 
     val commands = listOf(onboarding) + listOf(
@@ -145,7 +149,7 @@ object CommandManager {
         ) { _, _ ->
             """
                 *Wifi pass* :signal_strength: :key:
-                Internal: `$XL_PASSWORD`, Guests: `$XL_GUEST_PASSWORD`
+                Internal: `${Config.XL_PASSWORD}`, Guests: `${Config.XL_GUEST_PASSWORD}`
             """.trimIndent()
         },
         Command(
@@ -198,7 +202,7 @@ object CommandManager {
                 .blocks(withBlocks {
                     section {
                         markdownText(
-                            "Hi :wave:! Check XL useful <@$BOT_USER_ID> commands! :slack:"
+                            "Hi :wave:! Check XL useful <@${Config.BOT_USER_ID}> commands! :slack:"
                         )
                     }
 
@@ -210,7 +214,7 @@ object CommandManager {
                                     actionId(command.buttonActionId)
                                     text(command.title, emoji = true)
                                     if (visibleInChannel) {
-                                        value(ACTION_VALUE_VISIBLE)
+                                        value(Config.ACTION_VALUE_VISIBLE)
                                     }
                                 }
                                 if (!command.description.isNullOrBlank()) {
@@ -228,7 +232,7 @@ object CommandManager {
                 .joinToString(" \n") { command ->
                     "• *${command.title}*: $${command.description}"
                 }
-            "\nHi :wave:! Check XL useful <@$BOT_USER_ID> commands! :slack:\n\n$options"
+            "\nHi :wave:! Check XL useful <@${Config.BOT_USER_ID}> commands! :slack:\n\n$options"
         },
     )
 
@@ -260,9 +264,9 @@ object CommandManager {
         .answerResponse(payload?.text, ctx, visibleInChannel)
 }
 
-private fun getMembersFromCommandText(ctx: Context, peopleCommandText: String?): List<String>? =
+private fun getMembersFromCommandText(peopleCommandText: String?): List<String>? =
     peopleCommandText
         ?.split("@")
-        ?.map { it.trim() }
-        ?.filterNot { it.isBlank() }
-        ?.let { UserChannelRepository.toUserId(ctx, it) }
+        ?.map(String::trim)
+        ?.filterNot(String::isBlank)
+        ?.let { UserSlackRepository.toUserId(it) }

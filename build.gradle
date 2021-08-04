@@ -26,6 +26,7 @@ sourceSets {
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 shadowJar {
@@ -39,20 +40,28 @@ tasks.register("stage") {
 }
 
 def boltVersion = "1.8.1"
-def kotlinCoroutines= "1.5.1"
-def kotlinSerialization= "1.2.2"
-def slf4jVersion = "1.7.30"
 def detektVersion = "1.17.1"
+def kotlinCoroutines = "1.5.1"
+def kotlinSerialization = "1.2.2"
+def ktorVersion = "1.6.2"
+def slf4jVersion = "1.7.30"
+def toogleReportsVersion = "toggl-report-api-1.1.0"
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutines")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinSerialization")
-    implementation("com.slack.api:bolt:$boltVersion")
-    implementation("com.slack.api:bolt-servlet:$boltVersion")
-    implementation("com.slack.api:bolt-jetty:$boltVersion")
-    implementation("com.slack.api:slack-api-model-kotlin-extension:$boltVersion")
-    implementation("com.slack.api:slack-api-client-kotlin-extension:$boltVersion")
-    implementation("org.slf4j:slf4j-simple:$slf4jVersion")
+    implementation "com.github.rocketbase-io:toggl-report-api:$toogleReportsVersion"
+    implementation "com.slack.api:bolt-jetty:$boltVersion"
+    implementation "com.slack.api:bolt-servlet:$boltVersion"
+    implementation "com.slack.api:bolt:$boltVersion"
+    implementation "com.slack.api:slack-api-client-kotlin-extension:$boltVersion"
+    implementation "com.slack.api:slack-api-model-kotlin-extension:$boltVersion"
+    implementation "io.ktor:ktor-client-auth:$ktorVersion"
+    implementation "io.ktor:ktor-client-cio:$ktorVersion"
+    implementation "io.ktor:ktor-client-core:$ktorVersion"
+    implementation "io.ktor:ktor-client-logging:$ktorVersion"
+    implementation "io.ktor:ktor-client-serialization:$ktorVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinSerialization"
+    implementation "org.slf4j:slf4j-simple:$slf4jVersion"
 }
 
 dependencies {

@@ -6,16 +6,16 @@ import com.slack.api.bolt.handler.builtin.BlockActionHandler
 import com.slack.api.bolt.request.builtin.BlockActionRequest
 import com.slack.api.bolt.response.Response
 import com.slack.api.bolt.response.ResponseTypes
-import com.xmartlabs.slackbot.ACTION_VALUE_VISIBLE
+import com.xmartlabs.slackbot.Config
 import com.xmartlabs.slackbot.Command
-import com.xmartlabs.slackbot.CommandManager
+import com.xmartlabs.slackbot.manager.CommandManager
 import com.xmartlabs.slackbot.view.XlBotCommandsViewCreator
 import com.xmartlabs.slackbot.extensions.logIfError
 
 class CommandActionHandler(private val command: Command) : BlockActionHandler {
     override fun apply(req: BlockActionRequest, ctx: ActionContext): Response {
         val visibleInChannel =
-            ACTION_VALUE_VISIBLE.equals(req.payload.actions?.get(0)?.value, ignoreCase = true)
+            Config.ACTION_VALUE_VISIBLE.equals(req.payload.actions?.get(0)?.value, ignoreCase = true)
         if (req.payload.responseUrl != null) {
             // Post a message to the same channel if it's a block in a message
             ctx.respond(

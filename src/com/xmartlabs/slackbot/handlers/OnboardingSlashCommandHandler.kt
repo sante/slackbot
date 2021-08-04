@@ -6,8 +6,8 @@ import com.slack.api.bolt.handler.builtin.SlashCommandHandler
 import com.slack.api.bolt.request.builtin.SlashCommandRequest
 import com.slack.api.bolt.response.Response
 import com.slack.api.bolt.response.ResponseTypes
-import com.xmartlabs.slackbot.CommandManager
-import com.xmartlabs.slackbot.PROTECTED_CHANNELS_NAMES
+import com.xmartlabs.slackbot.manager.CommandManager
+import com.xmartlabs.slackbot.Config
 
 class OnboardingSlashCommandHandler : SlashCommandHandler {
     companion object {
@@ -16,7 +16,7 @@ class OnboardingSlashCommandHandler : SlashCommandHandler {
     }
 
     override fun apply(req: SlashCommandRequest, ctx: SlashCommandContext): Response =
-        if (req.payload.channelName in PROTECTED_CHANNELS_NAMES) {
+        if (req.payload.channelName in Config.PROTECTED_CHANNELS_NAMES) {
             ctx.ack(PROTECTED_CHANNEL_MESSAGE)
         } else {
             val command = CommandManager.onboarding
