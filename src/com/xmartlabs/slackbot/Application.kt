@@ -12,9 +12,13 @@ import com.xmartlabs.slackbot.handlers.CreateAnnouncementGlobalShortcutHandler
 import com.xmartlabs.slackbot.handlers.MemberJoinedChannelEventHandler
 import com.xmartlabs.slackbot.handlers.OnboardingSlashCommandHandler
 import com.xmartlabs.slackbot.handlers.ProcessXlBotHelpCommandCommandHandler
+import com.xmartlabs.slackbot.handlers.TogglReportSlashCommandHandler
 import com.xmartlabs.slackbot.manager.CommandManager
+import com.xmartlabs.slackbot.repositories.ConversationSlackRepository
+import com.xmartlabs.slackbot.repositories.UserSlackRepository
 import com.xmartlabs.slackbot.usecases.RemindInvalidEntryTogglUseCase
 import com.xmartlabs.slackbot.view.AnnouncementViewCreator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
@@ -27,18 +31,30 @@ fun main() {
         .command("/xlbot", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = false))
         .command("/xlbot-visible", ProcessXlBotHelpCommandCommandHandler(visibleInChannel = true))
         .command("/onboarding", OnboardingSlashCommandHandler())
+        .command("/toggl-report", TogglReportSlashCommandHandler())
 
     handleMemberJoinedChannelEvent(app)
     handleAppOpenedEvent(app)
     handleShortcut(app)
     setupTooglReminders()
+    prefetchData()
     val server = SlackAppServer(app, "/slack/events", Config.PORT)
     server.start() // http://localhost:3000/slack/events
 }
 
+fun prefetchData() {
+    GlobalScope.launch(Dispatchers.IO) {
+        kotlin.runCatching {
+            ConversationSlackRepository.reloadCache()
+            UserSlackRepository.reloadCache()
+        }
+            .onFailure { logger.error("Error preloading data", it) }
+    }
+}
+
 fun setupTooglReminders() {
     if (Config.TOGGL_REPORTS_ENABLED) {
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.IO) {
             kotlin.runCatching { RemindInvalidEntryTogglUseCase().execute() }
                 .onFailure { logger.error("Error sending toggl reminders", it) }
         }

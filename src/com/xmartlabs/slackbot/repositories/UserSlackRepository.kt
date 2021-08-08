@@ -2,6 +2,7 @@ package com.xmartlabs.slackbot.repositories
 
 import com.slack.api.model.User
 import com.slack.api.model.block.LayoutBlock
+import com.xmartlabs.slackbot.Config
 import com.xmartlabs.slackbot.data.sources.ConversationSlackRemoteSource
 import com.xmartlabs.slackbot.data.sources.SlackRemoteSource
 import com.xmartlabs.slackbot.data.sources.UserSlackRemoteSource
@@ -48,4 +49,7 @@ object UserSlackRepository : SlackEntityRepository<User>() {
 
     suspend fun sendMessage(userId: String, text: String, blocks: List<LayoutBlock>? = null) =
         ConversationSlackRemoteSource.sendMessage(userId, text, blocks)
+
+    fun hasAdminPrivileges(userId: String): Boolean =
+        userId in Config.USERS_WITH_ADMIN_PRIVILEGES || getUser(userId)?.isAdmin == true
 }

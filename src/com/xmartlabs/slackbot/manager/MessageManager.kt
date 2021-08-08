@@ -5,10 +5,14 @@ import com.xmartlabs.slackbot.extensions.toPrettyString
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 @Suppress("MaxLineLength")
 object MessageManager {
     val LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd LLLL")
+    val LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+        .withLocale(Locale.US)
 
     fun getOngoardingMessage(xlBotUserId: String, newMembersIds: List<String>?): String {
         val joinedIds = newMembersIds?.joinToString(" ") { "<@$it>" }

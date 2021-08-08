@@ -1,7 +1,7 @@
 package com.xmartlabs.slackbot.data.sources
 
-import com.xmartlabs.slackbot.model.TogglUser
 import com.xmartlabs.slackbot.Config
+import com.xmartlabs.slackbot.model.TogglUser
 import io.rocketbase.toggl.api.model.TimeEntry
 import io.rocketbase.toggl.api.util.FetchAllDetailed
 import java.time.LocalDateTime
@@ -13,11 +13,10 @@ object TogglReportsRemoteSource {
                 "/to/${to.toLocalDate().toTogglApiFormat()}" +
                 "/users/${togglUser.userId}"
 
-    fun getTasksWithoutProjects(since: LocalDateTime, until: LocalDateTime): List<TimeEntry> {
+    fun getTasks(since: LocalDateTime, until: LocalDateTime): List<TimeEntry> {
         val userWithoutProjects = TogglApi.togglReportApi.detailed()
             .since(since)
             .until(until)
         return FetchAllDetailed.getAll(userWithoutProjects)
-            .filter { (it.projectId ?: 0L) == 0L || it.description.isNullOrBlank() }
     }
 }

@@ -2,20 +2,12 @@ package com.xmartlabs.slackbot.repositories
 
 import com.xmartlabs.slackbot.data.sources.SlackRemoteSource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 abstract class SlackEntityRepository<T> {
     protected var cachedEntities: List<T> = listOf()
         private set
     protected abstract val remoteSource: SlackRemoteSource<T>
-
-    init {
-        GlobalScope.launch(Dispatchers.IO) {
-            reloadCache()
-        }
-    }
 
     suspend fun reloadCache() = withContext(Dispatchers.IO) {
         getAndCacheRemoteEntities()

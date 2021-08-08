@@ -28,7 +28,7 @@ class RemindInvalidEntryTogglUseCase : CoroutineUseCase {
 
             val to = calculateTo()
             val from = calculateFrom(to)
-            TogglReportManager.sendReport(LocalDate.now().reportType, from, to)
+            TogglReportManager.sendUntrackedTimeReport(LocalDate.now().reportType, from, to)
         }
     }
 
