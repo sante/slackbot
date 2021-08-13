@@ -2,7 +2,6 @@ package com.xmartlabs.slackbot.manager
 
 import com.slack.api.model.User
 import com.xmartlabs.slackbot.Config
-import com.xmartlabs.slackbot.extensions.toPrettyString
 import com.xmartlabs.slackbot.logger
 import com.xmartlabs.slackbot.model.TogglUserEntryReport
 import com.xmartlabs.slackbot.model.workTime
@@ -10,47 +9,37 @@ import com.xmartlabs.slackbot.model.wrongFormatTrackedTime
 import com.xmartlabs.slackbot.repositories.ConversationSlackRepository
 import com.xmartlabs.slackbot.repositories.TogglReportRepository
 import com.xmartlabs.slackbot.repositories.UserSlackRepository
-import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.temporal.TemporalAdjusters
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinDuration
 
 @OptIn(ExperimentalTime::class)
 object TogglReportManager {
-    suspend fun sendWeeklyWorkingTimeReport(notifyUserId: String, week: LocalDate) {
-        val from = week
-            .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-            .atTime(LocalTime.MAX)
-        val to = from.plusWeeks(1)
-        logger.info("Generate WeeklyWorkingTimeReport from $from to $to")
-        val report = TogglReportRepository.generateReport(from, to)
-            .groupBy { report ->
-                WorkHoursGroup.values()
-                    .find { report.workTime.toHours() in it.hsRange }
-            }
-
-        val reportMessage = report.entries
-            .sortedBy { (group, _) -> group?.ordinal }
-            .joinToString("\n") { (group, reports) ->
-                "Group $group:\n" + reports
-                    .sortedBy { it.workTime }
-                    .joinToString("\n") { report ->
-                        "   • ${report.togglUser.email} ${report.workTime.toHours()}"
-                    }
-            }
-        val fromFormatted = from.format(MessageManager.LOCAL_DATE_TIME_FORMATTER)
-        val toFormatted = to.format(MessageManager.LOCAL_DATE_TIME_FORMATTER)
-        val message = "Report from $fromFormatted to $toFormatted \n$reportMessage"
+    suspend fun sendTimeReport(
+        reportType: ReportType,
+        notifyUserId: String,
+        reportSort: ReportSort,
+        fromDate: LocalDate,
+        toDate: LocalDate,
+    ) {
+        logger.info("Generate ${reportType.reportName} report from $fromDate to $toDate")
+        val report = generateStringReport(
+            reportType,
+            reportSort,
+            TogglReportRepository.generateReport(fromDate.atTime(LocalTime.MIN), toDate.atTime(LocalTime.MAX))
+        )
+        val fromFormatted = fromDate.format(MessageManager.LOCAL_DATE_FORMATTER)
+        val toFormatted = toDate.format(MessageManager.LOCAL_DATE_FORMATTER)
+        val message = "Report from $fromFormatted to $toFormatted \n$report"
         logger.info(message)
         UserSlackRepository.sendMessage(notifyUserId, message)
     }
 
     suspend fun sendUntrackedTimeReport(
-        reportType: ReportType,
+        reportType: ReportPeriodType,
         from: LocalDateTime,
         to: LocalDateTime,
     ) {
@@ -62,7 +51,7 @@ object TogglReportManager {
         logger.info("Fetch toggl entries from: $from to $to")
         TogglReportRepository.generateReport(from, to)
             .filter { report ->
-                reportType == ReportType.MONTHLY ||
+                reportType == ReportPeriodType.MONTHLY ||
                         report.wrongFormatTrackedTime >= Config.TOGGL_WEEKLY_REPORT_MIN_UNTRACKED_DURATION_TO_NOTIFY
             }
             .mapNotNull { report ->
@@ -109,9 +98,10 @@ object TogglReportManager {
         if (Config.TOGGL_REPORTS_SLACK_CHANNEL_ID.isBlank()) {
             logger.info("Ignore weekly report, report channel was not defined.")
         } else {
-            val entriesMessage = entries.joinToString("\n") { (slackUser, togglReport) ->
-                "${slackUser.profile.email}: ${togglReport.wrongFormatTrackedTime.toPrettyString()}"
-            }
+            val entriesMessage = entries
+                .map { (_, entry) -> entry }
+                .sortedBy { entry -> entry.togglUser.name }
+                .formatReports(ReportType.WRONG_TRACKED_ENTRIES_TIME)
             val reportDuration = Duration.between(startReportTime, LocalDateTime.now())
                 .toKotlinDuration()
             val reportGeneratedInfo = "Reported generated " +
@@ -126,25 +116,51 @@ object TogglReportManager {
             )
         }
     }
+
+    private fun generateStringReport(
+        reportType: ReportType,
+        reportSort: ReportSort,
+        report: List<TogglUserEntryReport>,
+    ): String = report
+        .filter { it.duration(reportType) > Config.TOGGL_WEEKLY_REPORT_MIN_UNTRACKED_DURATION_TO_NOTIFY }
+        .let { entries ->
+            when (reportSort) {
+                ReportSort.TIME -> entries.sortedBy { it.duration(reportType) }
+                ReportSort.ALPHA -> entries.sortedBy { it.togglUser.name }
+            }
+        }
+        .formatReports(reportType)
 }
 
-enum class ReportType {
+@Suppress("MagicNumber")
+private fun List<TogglUserEntryReport>.formatReports(reportType: ReportType) = joinToString("\n") { entry ->
+    val (hours, minutes) = entry.duration(reportType)
+        .let { workTime -> workTime.toHours() to workTime.toMinutesPart() }
+    "   • ${entry.togglUser.name}, $hours:${if (minutes < 10) "0$minutes" else minutes}"
+}
+
+enum class ReportPeriodType {
     MONTHLY,
     WEEKLY,
 }
 
-private const val THREASHOLD_HOURS = 3
-private const val PART_TIME_HOURS = 30
-private const val FULL_TIME_HOURS = 40
-
-enum class WorkHoursGroup(val hsRange: IntRange) {
-    LESS_THAN_PART_TIME(0..(PART_TIME_HOURS - THREASHOLD_HOURS)),
-    PART_TIME(
-        (PART_TIME_HOURS - THREASHOLD_HOURS)..(PART_TIME_HOURS + THREASHOLD_HOURS)
-    ),
-    BETWEEN_PART_AND_FULL(
-        (PART_TIME_HOURS + THREASHOLD_HOURS)..(FULL_TIME_HOURS - THREASHOLD_HOURS)),
-    FULL_TIME(
-        (FULL_TIME_HOURS - THREASHOLD_HOURS)..(FULL_TIME_HOURS + THREASHOLD_HOURS)),
-    MORE_THAN_FULL_TIME((FULL_TIME_HOURS - THREASHOLD_HOURS)..Int.MAX_VALUE),
+enum class ReportSort {
+    ALPHA,
+    TIME,
 }
+
+enum class ReportType {
+    WORKED_HOURS,
+    WRONG_TRACKED_ENTRIES_TIME,
+}
+
+private fun TogglUserEntryReport.duration(reportType: ReportType) = when (reportType) {
+    ReportType.WORKED_HOURS -> workTime
+    ReportType.WRONG_TRACKED_ENTRIES_TIME -> wrongFormatTrackedTime
+}
+
+private val ReportType.reportName: String
+    get() = when (this) {
+        ReportType.WORKED_HOURS -> "Worked Hours"
+        ReportType.WRONG_TRACKED_ENTRIES_TIME -> "Wrong tracked entries"
+    }

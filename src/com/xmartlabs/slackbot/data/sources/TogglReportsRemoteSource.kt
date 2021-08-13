@@ -1,6 +1,7 @@
 package com.xmartlabs.slackbot.data.sources
 
 import com.xmartlabs.slackbot.Config
+import com.xmartlabs.slackbot.extensions.toTogglApiFormat
 import com.xmartlabs.slackbot.model.TogglUser
 import io.rocketbase.toggl.api.model.TimeEntry
 import io.rocketbase.toggl.api.util.FetchAllDetailed

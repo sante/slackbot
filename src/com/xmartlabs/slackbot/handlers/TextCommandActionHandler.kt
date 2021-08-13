@@ -7,12 +7,13 @@ import com.slack.api.bolt.request.builtin.BlockActionRequest
 import com.slack.api.bolt.response.Response
 import com.slack.api.bolt.response.ResponseTypes
 import com.xmartlabs.slackbot.Config
-import com.xmartlabs.slackbot.Command
-import com.xmartlabs.slackbot.manager.CommandManager
-import com.xmartlabs.slackbot.view.XlBotCommandsViewCreator
+import com.xmartlabs.slackbot.TextCommand
 import com.xmartlabs.slackbot.extensions.logIfError
+import com.xmartlabs.slackbot.manager.CommandManager
+import com.xmartlabs.slackbot.repositories.UserSlackRepository
+import com.xmartlabs.slackbot.view.XlBotCommandsViewCreator
 
-class CommandActionHandler(private val command: Command) : BlockActionHandler {
+class TextCommandActionHandler(private val command: TextCommand) : BlockActionHandler {
     override fun apply(req: BlockActionRequest, ctx: ActionContext): Response {
         val visibleInChannel =
             Config.ACTION_VALUE_VISIBLE.equals(req.payload.actions?.get(0)?.value, ignoreCase = true)
@@ -32,6 +33,7 @@ class CommandActionHandler(private val command: Command) : BlockActionHandler {
             val appHomeView = XlBotCommandsViewCreator.createHomeView(
                 ctx = ctx,
                 userId = user,
+                isAdmin = UserSlackRepository.hasAdminPrivileges(user),
                 commandsWithAssociatedAction = CommandManager.commands,
                 selectedCommand = command
             )

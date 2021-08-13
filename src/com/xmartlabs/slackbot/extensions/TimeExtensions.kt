@@ -4,6 +4,7 @@ import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
@@ -50,3 +51,7 @@ fun LocalDate.toLastWorkingDayOfTheMonth(): LocalDate = with(TemporalAdjusters.l
             else -> temporal
         }
     }
+
+fun LocalDate.formatUsingSlackFormatter(): String = format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+fun LocalDate.toTogglApiFormat(): String = format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))

@@ -23,3 +23,14 @@ fun MutableMap<String, MutableMap<String, ViewState.Value>>.getSelectedChannel(i
 
 fun MutableMap<String, MutableMap<String, ViewState.Value>>.getSelectedOptionValue(input: SectionBlock) =
     this[input.blockId]?.get((input.accessory as StaticSelectElement).actionId)?.selectedOption?.value
+
+fun MutableMap<String, MutableMap<String, ViewState.Value>>.getSelectedOptionValue(blockId: String, actionId: String) =
+    getAssociatedValue(blockId, actionId)?.selectedOption?.value
+
+fun MutableMap<String, MutableMap<String, ViewState.Value>>.getSelectedDate(blockId: String, actionId: String) =
+    getAssociatedValue(blockId, actionId)?.selectedDate
+
+private fun MutableMap<String, MutableMap<String, ViewState.Value>>.getAssociatedValue(
+    blockId: String,
+    actionId: String,
+): ViewState.Value? = this[blockId]?.get(actionId)

@@ -4,7 +4,7 @@ import com.xmartlabs.slackbot.Config
 import com.xmartlabs.slackbot.extensions.isLastWorkingDayOfTheMonth
 import com.xmartlabs.slackbot.extensions.toLastWorkingDayOfTheMonth
 import com.xmartlabs.slackbot.logger
-import com.xmartlabs.slackbot.manager.ReportType
+import com.xmartlabs.slackbot.manager.ReportPeriodType
 import com.xmartlabs.slackbot.manager.TogglReportManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,7 +23,7 @@ class RemindInvalidEntryTogglUseCase : CoroutineUseCase {
     override suspend fun execute() = withContext(Dispatchers.IO) {
         while (true) {
             val nextReview = durationToNextReminder()
-            logger.info("Next check in ${nextReview.toKotlinDuration()})")
+            logger.info("Toogle automatically report will be checked in ${nextReview.toKotlinDuration()})")
             delay(nextReview.toKotlinDuration())
 
             val to = calculateTo()
@@ -33,7 +33,7 @@ class RemindInvalidEntryTogglUseCase : CoroutineUseCase {
     }
 
     private fun calculateTo(): LocalDateTime =
-        if (LocalDate.now().reportType == ReportType.MONTHLY) {
+        if (LocalDate.now().reportType == ReportPeriodType.MONTHLY) {
             LocalDateTime.now()
         } else {
             LocalDateTime.now()
@@ -49,7 +49,7 @@ class RemindInvalidEntryTogglUseCase : CoroutineUseCase {
         }
 
     private fun calculateFrom(to: LocalDateTime): LocalDateTime =
-        if (LocalDate.now().reportType == ReportType.MONTHLY) {
+        if (LocalDate.now().reportType == ReportPeriodType.MONTHLY) {
             LocalDateTime.now()
                 .withDayOfMonth(1)
                 .withHour(0)
@@ -97,6 +97,6 @@ class RemindInvalidEntryTogglUseCase : CoroutineUseCase {
         }
     }
 
-    private val LocalDate.reportType: ReportType
-        get() = if (isLastWorkingDayOfTheMonth()) ReportType.MONTHLY else ReportType.WEEKLY
+    private val LocalDate.reportType: ReportPeriodType
+        get() = if (isLastWorkingDayOfTheMonth()) ReportPeriodType.MONTHLY else ReportPeriodType.WEEKLY
 }

@@ -9,8 +9,6 @@ import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.features.logging.Logging
 import io.rocketbase.toggl.api.TogglReportApiBuilder
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlinx.serialization.json.Json as JsonBuilder
 
 object TogglApi {
@@ -41,5 +39,3 @@ object TogglApi {
         install(Logging)
     }
 }
-
-fun LocalDate.toTogglApiFormat() = format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))

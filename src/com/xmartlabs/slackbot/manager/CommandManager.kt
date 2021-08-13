@@ -5,15 +5,17 @@ import com.slack.api.app_backend.slash_commands.response.SlashCommandResponse
 import com.slack.api.bolt.context.Context
 import com.slack.api.bolt.response.ResponseTypes
 import com.slack.api.model.kotlin_extension.block.withBlocks
+import com.xmartlabs.slackbot.ActionCommand
 import com.xmartlabs.slackbot.Command
 import com.xmartlabs.slackbot.Config
+import com.xmartlabs.slackbot.TextCommand
 import com.xmartlabs.slackbot.buttonActionId
 import com.xmartlabs.slackbot.repositories.UserSlackRepository
 
 @Suppress("MaxLineLength")
 object CommandManager {
     val onboarding =
-        Command(
+        TextCommand(
             "onboarding", "setup process",
             title = "Onboarding :wave: :xl:",
             description = "Do you know what you have to do when you onboard to :xl: ?"
@@ -22,8 +24,8 @@ object CommandManager {
             MessageManager.getOngoardingMessage(Config.BOT_USER_ID, peoplePayloadText)
         }
 
-    val commands = listOf(onboarding) + listOf(
-        Command(
+    val commands: List<Command> = listOf(onboarding) + listOf(
+        TextCommand(
             "anniversary",
             title = "Anniversary :tada: :birthday:",
             description = "What happens in my anniversary/birthday? :tada: :birthday:"
@@ -42,7 +44,7 @@ object CommandManager {
                     • A fin de mes se hace un festejo para todos los cumpleañeros! La empresa compra tortas, bebidas y algo para picar. :birthday: :pizza:
                 """.trimIndent()
         },
-        Command(
+        TextCommand(
             "calendar",
             title = "Calendars setup :calendar:",
             description = "Who is in PTO? When is the next lightning talk? :calendar:",
@@ -53,7 +55,7 @@ object CommandManager {
                     - <https://www.notion.so/xmartlabs/Setup-Calendars-URLs-40a4c5506a03429dbdccea169646a8a3 | Calendar Setup>
                 """.trimIndent()
         },
-        Command(
+        TextCommand(
             "lightning",
             title = "Lightning talks :flashlight:",
             description = "WTF is a lightning talk :zap:?"
@@ -69,7 +71,7 @@ object CommandManager {
                 • Remember to track the talk in Toggl (Lightning talk -> Xmartlabs) :toggl_on:
                 """.trimIndent()
         },
-        Command(
+        TextCommand(
             "recycling",
             title = "Recycling :recycle:",
             description = "Recycling help! :recycle:"
@@ -107,7 +109,7 @@ object CommandManager {
                 *Recordá que todo lo reciclable tiene que estar limpio, seco y compactado!* :recycle:
                 """.trimIndent()
         },
-        Command(
+        TextCommand(
             "toggl",
             title = "Toggl :toggl_on:",
             description = "Where should I track this? :toggl_on:"
@@ -128,7 +130,7 @@ object CommandManager {
 
                 """.trimIndent()
         },
-        Command(
+        TextCommand(
             "time off", "vacations",
             title = " Time Off :beach_with_umbrella:",
             description = "How should I request my days off? :beach_with_umbrella:"
@@ -142,7 +144,7 @@ object CommandManager {
                 In order to do so, <https://xmartlabs.bamboohr.com/time_off/requests/create | please follow the steps in this form>. To expedite the process,  validate your request with your manager/PM before submitting it. Make sure you plan ahead of time since we always need to validate your time off with the client.
                 """.trimIndent()
         },
-        Command(
+        TextCommand(
             "wifi",
             title = "Wifi pass :signal_strength:",
             description = "Do you know Xmartlabs' office WIFI password? :signal_strength: :key:"
@@ -152,7 +154,7 @@ object CommandManager {
                 Internal: `${Config.XL_PASSWORD}`, Guests: `${Config.XL_GUEST_PASSWORD}`
             """.trimIndent()
         },
-        Command(
+        TextCommand(
             "frogs",
             title = "Frogs information :frog:",
             description = "Give me more information about Frogs :pray:"
@@ -167,7 +169,7 @@ object CommandManager {
                If there is anything else you want to ask, contact our amazing chef Enzo :cook:
             """.trimIndent()
         },
-        Command(
+        TextCommand(
             "slack", "guidelines",
             title = "XmartLabs' Slack Guidelines :slack:",
             description = "Which are the XmartLabs' Slack guidelines? :slack:"
@@ -181,7 +183,7 @@ object CommandManager {
 
             """.trimIndent()
         },
-        Command(
+        TextCommand(
             "feedback",
             title = "Share XlBot feedback! :writing_hand:",
             description = "How can I share XlBot feedback? :robot_face: :writing_hand:"
@@ -195,7 +197,7 @@ object CommandManager {
         },
     )
 
-    private val default = Command(
+    private val default = TextCommand(
         title = "Help Command",
         answerResponse = { _, _, visibleInChannel ->
             SlashCommandResponse.builder()
@@ -236,10 +238,24 @@ object CommandManager {
         },
     )
 
+    val toggleReportCommand = ActionCommand(
+        mainKey = "toggle-report",
+        title = "Generates toggl report :toggl_on:",
+        description = "Generates toggl report",
+        visible = false
+    )
+    val announcementCommand = ActionCommand(
+        mainKey = "announcement",
+        title = "Create announcement :loudspeaker:",
+        description = "Create announcement :loudspeaker:",
+        visible = false
+    )
+    val adminCommands: List<Command> = listOf(announcementCommand, toggleReportCommand)
+
     init {
         require(
             commands
-                .flatMap { it.keys.asList() }
+                .flatMap { if (it is TextCommand) it.keys.asList() else listOf(it.mainKey) }
                 .groupBy { it.lowercase() }
                 .values
                 .map { it.size }
@@ -252,9 +268,14 @@ object CommandManager {
     private fun String.sanitizeKey() = replace(" ", "_")
         .lowercase()
 
-    fun processCommand(ctx: Context, payload: SlashCommandPayload?, visibleInChannel: Boolean): SlashCommandResponse = (
+    fun processTextCommand(
+        ctx: Context,
+        payload: SlashCommandPayload?,
+        visibleInChannel: Boolean,
+    ): SlashCommandResponse = (
             payload?.text?.let { userKey ->
                 commands
+                    .filterIsInstance<TextCommand>()
                     .firstOrNull { command ->
                         command.keys.any { commandKey ->
                             userKey.sanitizeKey().contains(commandKey.sanitizeKey())
