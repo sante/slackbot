@@ -4,7 +4,7 @@ import com.slack.api.bolt.context.builtin.ViewSubmissionContext
 import com.slack.api.bolt.handler.builtin.ViewSubmissionHandler
 import com.slack.api.bolt.request.builtin.ViewSubmissionRequest
 import com.slack.api.bolt.response.Response
-import com.xmartlabs.slackbot.manager.TogglReportManager
+import com.xmartlabs.slackbot.manager.WorkTimeReportManager
 import com.xmartlabs.slackbot.view.TogglReportViewCreator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -14,7 +14,7 @@ class TogglReportViewSubmissionHandler : ViewSubmissionHandler {
     override fun apply(req: ViewSubmissionRequest, ctx: ViewSubmissionContext): Response {
         val request = TogglReportViewCreator.getToggleReportRequestFromPayload(req.payload)
         GlobalScope.launch(Dispatchers.IO) {
-            TogglReportManager.sendTimeReport(
+            WorkTimeReportManager.sendTimeReport(
                 reportType = request.type,
                 notifyUserId = req.payload.user.id,
                 reportSort = request.sort,

@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package com.xmartlabs.slackbot.extensions
 
 import java.time.DayOfWeek
@@ -8,12 +9,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
-import kotlin.time.ExperimentalTime
-import kotlin.time.toJavaDuration
-import kotlin.time.Duration as KotlinDuration
-
-@OptIn(ExperimentalTime::class)
-fun KotlinDuration.toPrettyString(): String = toJavaDuration().toPrettyString()
+import kotlin.math.absoluteValue
 
 fun Duration.toPrettyString(includeSeconds: Boolean = false): String {
     val parts: MutableList<String> = ArrayList()
@@ -52,6 +48,32 @@ fun LocalDate.toLastWorkingDayOfTheMonth(): LocalDate = with(TemporalAdjusters.l
         }
     }
 
-fun LocalDate.formatUsingSlackFormatter(): String = format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+fun LocalDate.formatUsingSlackFormatter(): String = toRegularFormat()
 
-fun LocalDate.toTogglApiFormat(): String = format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+fun LocalDate.toTogglApiFormat(): String = toRegularFormat()
+
+fun LocalDate.toRegularFormat(): String = format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+fun LocalDate.isWorkDay(): Boolean = !setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY).contains(dayOfWeek)
+
+fun workingDates(start: LocalDate, end: LocalDate): Long {
+    return start.datesUntil(end)
+        .filter { date -> date.isWorkDay() }
+        .count()
+}
+
+fun min(localDate1: LocalDate, localDate2: LocalDate) = if (localDate1.isBefore(localDate2)) localDate1 else localDate2
+
+fun max(localDate1: LocalDate, localDate2: LocalDate) = if (localDate1.isAfter(localDate2)) localDate1 else localDate2
+
+@Suppress("MagicNumber")
+fun Duration.toHourMinuteFormat(): String {
+    val hours = toHours()
+        .absoluteValue
+        .toString()
+    val minutes = toMinutesPart()
+        .absoluteValue
+        .let { minutes -> if (minutes < 10) "0$minutes" else minutes }
+    val sign = if (this < Duration.ZERO) "-" else ""
+    return "$sign$hours:$minutes"
+}

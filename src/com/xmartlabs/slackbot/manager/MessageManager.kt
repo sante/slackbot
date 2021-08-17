@@ -3,16 +3,17 @@ package com.xmartlabs.slackbot.manager
 import com.xmartlabs.slackbot.extensions.isLastWorkingDayOfTheMonth
 import com.xmartlabs.slackbot.extensions.toPrettyString
 import java.time.Duration
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
 @Suppress("MaxLineLength")
 object MessageManager {
-    val LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd LLLL")
-    val LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+    @Suppress("unused")
+    val LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
         .withLocale(Locale.US)
+    val LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("dd LLLL")
 
     fun getOngoardingMessage(xlBotUserId: String, newMembersIds: List<String>?): String {
         val joinedIds = newMembersIds?.joinToString(" ") { "<@$it>" }
@@ -35,10 +36,10 @@ object MessageManager {
     fun getInvalidTogglEntriesMessage(
         userId: String,
         untrackedTime: Duration,
-        from: LocalDateTime,
-        to: LocalDateTime,
+        from: LocalDate,
+        to: LocalDate,
         reportUrl: String,
-    ) = if (to.toLocalDate().isLastWorkingDayOfTheMonth()) {
+    ) = if (to.isLastWorkingDayOfTheMonth()) {
         getInvalidTogglEntriesMonthlyMessage(userId, untrackedTime, from, to, reportUrl)
     } else {
         getInvalidTogglEntriesWeeklyMessage(userId, untrackedTime, from, to, reportUrl)
@@ -47,8 +48,8 @@ object MessageManager {
     private fun getInvalidTogglEntriesWeeklyMessage(
         userId: String,
         untrackedTime: Duration,
-        from: LocalDateTime,
-        to: LocalDateTime,
+        from: LocalDate,
+        to: LocalDate,
         reportUrl: String,
     ) = """
         Hi <@$userId>, you have *${untrackedTime.toPrettyString()}* tracked toggl entries with an invalid format (no project assigned or an empty description).
@@ -62,8 +63,8 @@ object MessageManager {
     private fun getInvalidTogglEntriesMonthlyMessage(
         userId: String,
         untrackedTime: Duration,
-        from: LocalDateTime,
-        to: LocalDateTime,
+        from: LocalDate,
+        to: LocalDate,
         reportUrl: String,
     ) = """
         :warning::warning::warning:

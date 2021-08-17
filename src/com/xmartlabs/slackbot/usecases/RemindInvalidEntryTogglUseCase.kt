@@ -5,7 +5,7 @@ import com.xmartlabs.slackbot.extensions.isLastWorkingDayOfTheMonth
 import com.xmartlabs.slackbot.extensions.toLastWorkingDayOfTheMonth
 import com.xmartlabs.slackbot.logger
 import com.xmartlabs.slackbot.manager.ReportPeriodType
-import com.xmartlabs.slackbot.manager.TogglReportManager
+import com.xmartlabs.slackbot.manager.WorkTimeReportManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -13,7 +13,6 @@ import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.temporal.TemporalAdjusters
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinDuration
@@ -28,35 +27,30 @@ class RemindInvalidEntryTogglUseCase : CoroutineUseCase {
 
             val to = calculateTo()
             val from = calculateFrom(to)
-            TogglReportManager.sendUntrackedTimeReport(LocalDate.now().reportType, from, to)
+            WorkTimeReportManager.sendUntrackedTimeReport(LocalDate.now().reportType, from, to)
         }
     }
 
-    private fun calculateTo(): LocalDateTime =
+    private fun calculateTo(): LocalDate =
         if (LocalDate.now().reportType == ReportPeriodType.MONTHLY) {
-            LocalDateTime.now()
+            LocalDate.now()
         } else {
-            LocalDateTime.now()
+            LocalDate.now()
                 .let {
                     if (Config.TOGGLE_WEEKLY_REPORT_EXCLUDE_CURRENT_WEEK) {
-                        it.toLocalDate()
-                            .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-                            .atTime(LocalTime.MAX)
+                        it.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
                     } else {
                         it
                     }
                 }
         }
 
-    private fun calculateFrom(to: LocalDateTime): LocalDateTime =
+    private fun calculateFrom(to: LocalDate): LocalDate =
         if (LocalDate.now().reportType == ReportPeriodType.MONTHLY) {
-            LocalDateTime.now()
+            LocalDate.now()
                 .withDayOfMonth(1)
-                .withHour(0)
-                .withMinute(0)
         } else {
             to.minusDays(Config.TOGGL_WEEKLY_REPORT_DAYS_TO_CHECK.toLong())
-                .plusNanos(1) // Change to next day
         }
 
     private fun durationToNextReminder(): Duration =

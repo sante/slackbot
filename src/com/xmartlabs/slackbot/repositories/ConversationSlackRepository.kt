@@ -20,4 +20,7 @@ object ConversationSlackRepository : SlackEntityRepository<Conversation>() {
 
     suspend fun sendMessage(channelId: String, text: String, blocks: List<LayoutBlock>? = null) =
         ConversationSlackRemoteSource.sendMessage(channelId, text, blocks)
+
+    suspend fun sendCsvFile(channelId: String, fileName: String, title: String, content: String) =
+        ConversationSlackRemoteSource.sendCsvFile(channelId, fileName, title, content)
 }

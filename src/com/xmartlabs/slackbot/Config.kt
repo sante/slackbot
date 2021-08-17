@@ -7,6 +7,11 @@ import java.time.OffsetTime
 
 @Suppress("MagicNumber")
 object Config {
+    val DEBUG = System.getenv("DEBUG")?.toBoolean() ?: false
+
+    const val WORK_DAYS = 5
+    const val MAX_WORKING_HOURS_PER_DAY = 8
+
     val PROTECTED_CHANNELS_NAMES = listOf("general", "announcements")
 
     val SLACK_TOKEN: String = System.getenv("SLACK_BOT_TOKEN")
@@ -28,6 +33,8 @@ object Config {
     val TOGGL_XL_ORGANIZATION = System.getenv("TOGGL_XL_ORGANIZATION")?.toLong() ?: -1
     val TOGGL_XL_WORKSPACE = System.getenv("TOGGL_XL_WORKSPACE")?.toLong() ?: -1
     val TOGGL_API_KEY = System.getenv("TOGGL_API_KEY") ?: ""
+    val BAMBOO_API_KEY = System.getenv("BAMBOO_API_KEY") ?: ""
+    val BAMBOO_ORG_NAME_KEY = System.getenv("BAMBOO_ORG_NAME_KEY") ?: ""
     val TOGGL_USER_AGENT = System.getenv("TOGGL_USER_AGENT") ?: ""
     val TOGGL_REPORTS_SLACK_CHANNEL_ID = System.getenv("TOGGL_REPORTS_SLACK_CHANNEL_ID") ?: ""
 

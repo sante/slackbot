@@ -57,4 +57,26 @@ object ConversationSlackRemoteSource : SlackRemoteSource<Conversation>() {
                 }
             }
         }
+
+    suspend fun sendCsvFile(channelId: String, fileName: String, title: String, content: String): Boolean =
+        sentMessageMutex.withLockusingStabilizationDelay(NOTIFY_DELAY_IN_MILLIS) {
+            withContext(Dispatchers.IO) {
+                val response = slackMethods.filesUpload { req ->
+                    req.content(content)
+                        .title(title)
+                        .filename("$fileName.csv")
+                        .filetype("csv")
+                        .channels(listOf(channelId))
+                }
+                if (response.isOk) {
+                    defaultLogger.info("Send to: $channelId")
+                    true
+                } else {
+                    defaultLogger.logIfError(response) {
+                        "Error sending file to $channelId $response"
+                    }
+                    false
+                }
+            }
+        }
 }

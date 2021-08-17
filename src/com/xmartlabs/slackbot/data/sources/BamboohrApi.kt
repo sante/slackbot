@@ -8,15 +8,10 @@ import io.ktor.client.features.auth.providers.basic
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.features.logging.Logging
-import io.rocketbase.toggl.api.TogglReportApiBuilder
 import kotlinx.serialization.json.Json as JsonBuilder
 
-object TogglApi {
-    val togglReportApi = TogglReportApiBuilder()
-        .apiToken(Config.TOGGL_API_KEY)
-        .userAgent(Config.TOGGL_USER_AGENT)
-        .workspaceId(Config.TOGGL_XL_WORKSPACE)
-        .build()
+object BamboohrApi {
+    val BASE_URL = "https://api.bamboohr.com/api/gateway.php/${Config.BAMBOO_ORG_NAME_KEY}/v1"
 
     val client = HttpClient {
         install(Auth) {
@@ -24,8 +19,8 @@ object TogglApi {
                 sendWithoutRequest { true }
                 credentials {
                     BasicAuthCredentials(
-                        username = Config.TOGGL_API_KEY,
-                        password = "api_token"
+                        username = Config.BAMBOO_API_KEY,
+                        password = "x"
                     )
                 }
             }
@@ -34,7 +29,6 @@ object TogglApi {
             serializer = KotlinxSerializer(JsonBuilder {
                 prettyPrint = true
                 isLenient = true
-                encodeDefaults = true
                 ignoreUnknownKeys = true
             })
         }
